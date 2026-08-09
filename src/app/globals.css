@@ -1,0 +1,343 @@
+@import "tailwindcss";
+
+@theme {
+  --color-obsidian: #090a0f;
+  --color-obsidian-light: #0f1118;
+  --color-obsidian-card: #12141c;
+  --color-obsidian-border: #1e2030;
+  --color-cream: #f5f0e8;
+  --color-cream-muted: #b8b0a2;
+  --color-gold: #c8a44e;
+  --color-gold-bright: #e0ba5a;
+  --color-gold-dim: #9a7b3a;
+  --color-accent-blue: #3b82c4;
+
+  --font-heading: "Manrope", sans-serif;
+  --font-body: "Inter", sans-serif;
+}
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5.5rem;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-obsidian);
+  color: var(--color-cream);
+  overflow-x: hidden;
+}
+
+::selection {
+  background-color: var(--color-gold);
+  color: var(--color-obsidian);
+}
+
+/* ============================================
+   SCROLLBAR
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-obsidian);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-obsidian-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gold-dim);
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes scroll-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(8px); }
+}
+
+@keyframes gentle-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+.animate-scroll-bounce {
+  animation: scroll-bounce 2s ease-in-out infinite;
+}
+
+.animate-gentle-pulse {
+  animation: gentle-pulse 3s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* ============================================
+   GLASS & OVERLAYS
+   ============================================ */
+
+.glass-nav {
+  background: rgba(9, 10, 15, 0.7);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+.glass-card {
+  background: rgba(18, 20, 28, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(200, 164, 78, 0.08);
+}
+
+/* ============================================
+   GRADIENT EFFECTS
+   ============================================ */
+
+.gold-gradient-text {
+  background: linear-gradient(135deg, var(--color-gold-bright), var(--color-gold), var(--color-gold-dim));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.glow-gold {
+  box-shadow: 0 0 40px rgba(200, 164, 78, 0.15), 0 0 80px rgba(200, 164, 78, 0.05);
+}
+
+.glow-gold-subtle {
+  box-shadow: 0 0 20px rgba(200, 164, 78, 0.08);
+}
+
+/* ============================================
+   HERO SPECIFIC
+   ============================================ */
+
+.hero-overlay {
+  background: linear-gradient(
+    180deg,
+    rgba(9, 10, 15, 0.3) 0%,
+    rgba(9, 10, 15, 0.5) 40%,
+    rgba(9, 10, 15, 0.85) 80%,
+    rgba(9, 10, 15, 1) 100%
+  );
+}
+
+.hero-overlay-radial {
+  background: radial-gradient(
+    ellipse at 70% 20%,
+    rgba(200, 164, 78, 0.05) 0%,
+    transparent 60%
+  );
+}
+
+/* ============================================
+   SECTION UTILITY
+   ============================================ */
+
+.section-pad {
+  padding-left: max(1.25rem, env(safe-area-inset-left));
+  padding-right: max(1.25rem, env(safe-area-inset-right));
+}
+
+/* ============================================
+   BUTTON STYLES
+   ============================================ */
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  background: var(--color-gold);
+  color: var(--color-obsidian);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.8125rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary:hover {
+  background: var(--color-gold-bright);
+  box-shadow: 0 8px 30px rgba(200, 164, 78, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-primary:hover .btn-arrow {
+  transform: translateX(4px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-arrow {
+  transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  color: var(--color-cream-muted);
+  font-family: var(--font-heading);
+  font-weight: 500;
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  border: 1px solid var(--color-obsidian-border);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-outline:hover {
+  color: var(--color-cream);
+  border-color: var(--color-gold-dim);
+}
+
+/* ============================================
+   DECORATIVE
+   ============================================ */
+
+.thin-rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-obsidian-border), transparent);
+}
+
+.gold-rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-gold-dim), transparent);
+}
+
+.decorative-number {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: clamp(6rem, 15vw, 12rem);
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(200, 164, 78, 0.08);
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ============================================
+   EXPERIENCE CARDS
+   ============================================ */
+
+.exp-card {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.exp-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 40%, rgba(9, 10, 15, 0.95) 100%);
+  z-index: 1;
+  transition: all 0.5s ease;
+}
+
+.exp-card:hover::before {
+  background: linear-gradient(180deg, transparent 20%, rgba(9, 10, 15, 0.9) 100%);
+}
+
+.exp-card:hover {
+  transform: translateY(-4px);
+}
+
+.exp-card:hover .exp-card-img {
+  transform: scale(1.05);
+}
+
+.exp-card-img {
+  transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* ============================================
+   GALLERY
+   ============================================ */
+
+.gallery-item {
+  overflow: hidden;
+  position: relative;
+}
+
+.gallery-item img {
+  transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.gallery-item:hover img {
+  transform: scale(1.06);
+}
+
+/* ============================================
+   FAQ ACCORDION
+   ============================================ */
+
+.faq-item {
+  border-bottom: 1px solid var(--color-obsidian-border);
+  transition: border-color 0.3s ease;
+}
+
+.faq-item:hover {
+  border-color: rgba(200, 164, 78, 0.2);
+}
+
+/* ============================================
+   REDUCED MOTION
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .animate-scroll-bounce,
+  .animate-gentle-pulse,
+  .animate-float {
+    animation: none;
+  }
+
+  .exp-card,
+  .exp-card::before,
+  .exp-card-img,
+  .gallery-item img,
+  .btn-primary,
+  .btn-outline {
+    transition: none;
+  }
+}
