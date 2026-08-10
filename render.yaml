@@ -11,6 +11,9 @@ services:
       - type: rewrite
         source: /register
         destination: /register/
+      - type: rewrite
+        source: /payment
+        destination: /payment/
     envVars:
       - key: NEXT_PUBLIC_FIREBASE_API_KEY
         sync: false
@@ -25,6 +28,12 @@ services:
       - key: NEXT_PUBLIC_FIREBASE_APP_ID
         sync: false
       - key: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+        sync: false
+      - key: NEXT_PUBLIC_UPI_ID
+        sync: false
+      - key: NEXT_PUBLIC_UPI_PAYEE_NAME
+        sync: false
+      - key: NEXT_PUBLIC_UPI_NOTE
         sync: false
 
   - type: web

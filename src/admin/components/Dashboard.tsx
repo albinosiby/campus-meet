@@ -98,8 +98,9 @@ export function Dashboard() {
                 Reports & Analytics
               </p>
               <p className="mt-2 max-w-xl text-sm leading-relaxed text-admin-muted">
-                Participants register free for now. Mark payment status when
-                the fee is collected later. Amount received so far:{" "}
+                Participants register free for now. In a few weeks they will pay
+                on a payment page using the same email ID. Mark payment status
+                when fees are collected. Amount received so far:{" "}
                 <span className="font-heading font-semibold text-admin-ink">
                   {formatCurrency(stats.amountReceived)}
                 </span>

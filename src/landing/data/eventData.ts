@@ -19,9 +19,10 @@ export const EVENT_INFO = {
   description:
     "A gathering of campus youth to encounter, connect, grow and live the mission together.",
   registerUrl: "/register",
+  paymentUrl: "/payment",
 };
 
-/** Update these when official payment details are confirmed. */
+/** Payment config. UPI details come from env so you can change them without code edits. */
 export const EVENT_PAYMENT = {
   amount: 950,
   currency: "INR",
@@ -29,11 +30,33 @@ export const EVENT_PAYMENT = {
   /** Fee is shown now but not charged at registration time. */
   collectLater: true,
   collectionNote:
-    "Register free for now. The registration fee will be collected later.",
-} as const;
+    "Register free for now. The ₹950 fee will be collected later (in a few weeks) on a payment page. Use the same email ID you register with — that email is how we match your payment to this registration.",
+  emailMatchNote:
+    "Use an email you can access later. When payment opens, you must enter this same email ID so we can link your payment to this registration.",
+  upiId: process.env.NEXT_PUBLIC_UPI_ID?.trim() || "",
+  payeeName:
+    process.env.NEXT_PUBLIC_UPI_PAYEE_NAME?.trim() || "Jesus Youth Malabar",
+  upiNote:
+    process.env.NEXT_PUBLIC_UPI_NOTE?.trim() || "Malabar Campus Meet 2026",
+};
 
 export function formatRegistrationFee(): string {
   return `${EVENT_PAYMENT.currencySymbol}${EVENT_PAYMENT.amount}`;
+}
+
+export function buildUpiPaymentLink(): string {
+  const params = new URLSearchParams({
+    pa: EVENT_PAYMENT.upiId,
+    pn: EVENT_PAYMENT.payeeName,
+    am: String(EVENT_PAYMENT.amount),
+    cu: EVENT_PAYMENT.currency,
+    tn: EVENT_PAYMENT.upiNote,
+  });
+  return `upi://pay?${params.toString()}`;
+}
+
+export function isUpiConfigured(): boolean {
+  return EVENT_PAYMENT.upiId.length > 0;
 }
 
 export const SNAPSHOT_ITEMS = [
@@ -128,17 +151,17 @@ export const FAQ_ITEMS = [
   {
     question: "What is the registration fee?",
     answer:
-      "The registration fee is ₹950 per participant. You can register free for now — the amount will be collected later.",
+      "The registration fee is ₹950 per participant. You can register free for now — payment will be collected later (in a few weeks) through a payment page.",
   },
   {
     question: "How do I register?",
     answer:
-      'Click the "Register Now" button on this page to fill out the online registration form. Payment is not required at signup; the ₹950 fee will be collected later.',
+      'Click the "Register Now" button on this page to fill out the online registration form. Payment is not required at signup. Remember the email you use — you will need the same email when paying later.',
   },
   {
     question: "How do I make the payment?",
     answer:
-      "No payment is needed while registering. The registration fee of ₹950 will be collected later. Details will be shared with registered participants.",
+      "No payment is needed while registering. Open the payment page later, enter the same email ID used for registration, pay ₹950 via UPI, and submit your transaction ID. Your email is used to match the payment to your registration.",
   },
   {
     question: "What should I bring?",

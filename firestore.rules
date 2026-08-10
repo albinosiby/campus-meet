@@ -21,18 +21,26 @@ service cloud.firestore {
         && request.resource.data.dietary in ['none', 'veg', 'nonveg'];
     }
 
-    match /registrations/{registrationId} {
-      // Public form can create registrations
-      allow create: if isValidRegistrationCreate();
-
-      // Admin panel (password-gated in the app) can read reports
-      allow read: if true;
-
-      // Only paymentStatus may be updated
-      allow update: if request.resource.data.diff(resource.data).affectedKeys()
+    function isAdminPaymentStatusUpdate() {
+      return request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['paymentStatus'])
         && request.resource.data.paymentStatus in ['paid', 'unpaid', 'pending'];
+    }
 
+    function isPublicPaymentSubmit() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['paymentStatus', 'transactionId'])
+        && resource.data.paymentStatus in ['unpaid', 'pending']
+        && resource.data.paymentStatus != 'paid'
+        && request.resource.data.paymentStatus == 'pending'
+        && request.resource.data.transactionId is string
+        && request.resource.data.transactionId.size() >= 6;
+    }
+
+    match /registrations/{registrationId} {
+      allow create: if isValidRegistrationCreate();
+      allow read: if true;
+      allow update: if isAdminPaymentStatusUpdate() || isPublicPaymentSubmit();
       allow delete: if false;
     }
   }
