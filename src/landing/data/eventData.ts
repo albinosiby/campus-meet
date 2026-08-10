@@ -23,23 +23,17 @@ export const EVENT_INFO = {
 
 /** Update these when official payment details are confirmed. */
 export const EVENT_PAYMENT = {
-  amount: 500,
+  amount: 950,
   currency: "INR",
   currencySymbol: "₹",
-  upiId: "jesusyouthmcm@upi",
-  payeeName: "Jesus Youth MCM",
-  note: "MCM 2026 Registration",
+  /** Fee is shown now but not charged at registration time. */
+  collectLater: true,
+  collectionNote:
+    "Register free for now. The registration fee will be collected later.",
 } as const;
 
-export function buildUpiPayUrl(amount = EVENT_PAYMENT.amount): string {
-  const params = new URLSearchParams({
-    pa: EVENT_PAYMENT.upiId,
-    pn: EVENT_PAYMENT.payeeName,
-    am: String(amount),
-    cu: EVENT_PAYMENT.currency,
-    tn: EVENT_PAYMENT.note,
-  });
-  return `upi://pay?${params.toString()}`;
+export function formatRegistrationFee(): string {
+  return `${EVENT_PAYMENT.currencySymbol}${EVENT_PAYMENT.amount}`;
 }
 
 export const SNAPSHOT_ITEMS = [
@@ -134,17 +128,17 @@ export const FAQ_ITEMS = [
   {
     question: "What is the registration fee?",
     answer:
-      "The registration fee is ₹500 per participant. Pay via UPI using the QR code or UPI ID on the registration form, then enter your transaction ID to complete registration.",
+      "The registration fee is ₹950 per participant. You can register free for now — the amount will be collected later.",
   },
   {
     question: "How do I register?",
     answer:
-      'Click the "Register Now" button on this page to fill out the online registration form. You will receive a confirmation once your registration and payment are verified.',
+      'Click the "Register Now" button on this page to fill out the online registration form. Payment is not required at signup; the ₹950 fee will be collected later.',
   },
   {
     question: "How do I make the payment?",
     answer:
-      "On the registration form, scan the UPI QR code or copy the UPI ID, complete the payment of ₹500, then enter the UPI transaction ID to submit your registration.",
+      "No payment is needed while registering. The registration fee of ₹950 will be collected later. Details will be shared with registered participants.",
   },
   {
     question: "What should I bring?",

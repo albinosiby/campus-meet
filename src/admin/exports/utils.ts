@@ -20,7 +20,6 @@ export const EXPORT_HEADERS = [
   "Diocese",
   "Dietary",
   "Amount (₹)",
-  "Transaction ID",
   "Payment Status",
   "Registered At",
 ] as const;
@@ -39,7 +38,6 @@ export function registrationToRow(reg: Registration): string[] {
     reg.diocese || "—",
     DIETARY_LABELS[reg.dietary],
     String(reg.amount ?? 0),
-    reg.transactionId || "—",
     PAYMENT_STATUS_LABELS[reg.paymentStatus] ?? reg.paymentStatus,
     new Date(reg.createdAt).toLocaleString("en-IN", {
       dateStyle: "medium",

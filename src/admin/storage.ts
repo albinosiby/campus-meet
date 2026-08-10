@@ -34,7 +34,7 @@ function mapRegistration(
     dietary: data.dietary ?? "none",
     amount: Number(data.amount ?? 0),
     transactionId: String(data.transactionId ?? ""),
-    paymentStatus: (data.paymentStatus as PaymentStatus) ?? "pending",
+    paymentStatus: (data.paymentStatus as PaymentStatus) ?? "unpaid",
     createdAt:
       typeof data.createdAt === "string"
         ? data.createdAt

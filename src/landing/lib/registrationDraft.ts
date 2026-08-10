@@ -9,7 +9,6 @@ export interface RegistrationDraft {
   zone: string;
   diocese: string;
   dietary: string;
-  transactionId: string;
 }
 
 export const EMPTY_REGISTRATION_DRAFT: RegistrationDraft = {
@@ -23,7 +22,6 @@ export const EMPTY_REGISTRATION_DRAFT: RegistrationDraft = {
   zone: "",
   diocese: "",
   dietary: "none",
-  transactionId: "",
 };
 
 const DRAFT_STORAGE_KEY = "mcm-registration-draft";

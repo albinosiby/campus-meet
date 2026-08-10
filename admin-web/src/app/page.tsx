@@ -10,7 +10,7 @@ export default function AdminLoginPage() {
 
   useEffect(() => {
     if (isAdminAuthenticated()) {
-      router.replace("/admin/dashboard/");
+      router.replace("/dashboard/");
     }
   }, [router]);
 

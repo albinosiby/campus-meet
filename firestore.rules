@@ -13,9 +13,8 @@ service cloud.firestore {
         && request.resource.data.email is string
         && request.resource.data.phone is string
         && request.resource.data.transactionId is string
-        && request.resource.data.transactionId.size() >= 6
         && request.resource.data.amount is number
-        && request.resource.data.paymentStatus == 'pending'
+        && request.resource.data.paymentStatus == 'unpaid'
         && request.resource.data.gender in ['male', 'female']
         && request.resource.data.year in ['1', '2', '3', '4', '5', 'pg']
         && request.resource.data.zone in ['kannur', 'kasargod', 'thalassery', 'kozhikode']

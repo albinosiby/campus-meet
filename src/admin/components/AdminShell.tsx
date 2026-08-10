@@ -18,7 +18,7 @@ export function AdminShell({ children, title, subtitle }: AdminShellProps) {
 
   useEffect(() => {
     if (!isAdminAuthenticated()) {
-      router.replace("/admin/");
+      router.replace("/");
       return;
     }
     setReady(true);
@@ -26,7 +26,7 @@ export function AdminShell({ children, title, subtitle }: AdminShellProps) {
 
   function handleLogout() {
     logoutAdmin();
-    router.replace("/admin/");
+    router.replace("/");
   }
 
   if (!ready) {

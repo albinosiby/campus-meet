@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+@source "../../../src/admin/**/*.{js,ts,jsx,tsx}";
+@source "../../../src/shared/**/*.{js,ts,jsx,tsx}";
+@source "../../../src/landing/**/*.{js,ts,jsx,tsx}";
+@source "./**/*.{js,ts,jsx,tsx}";
+
+@theme {
+  --color-obsidian: #090a0f;
+  --color-obsidian-light: #0f1118;
+  --color-obsidian-card: #12141c;
+  --color-obsidian-border: #1e2030;
+  --color-cream: #f5f0e8;
+  --color-cream-muted: #b8b0a2;
+  --color-gold: #c8a44e;
+  --color-gold-bright: #e0ba5a;
+  --color-gold-dim: #9a7b3a;
+  --color-accent-blue: #3b82c4;
+
+  --color-admin-bg: #f3f4f7;
+  --color-admin-surface: #ffffff;
+  --color-admin-elevated: #fafbfc;
+  --color-admin-border: #e2e5ec;
+  --color-admin-ink: #15171f;
+  --color-admin-muted: #6a7080;
+
+  --font-heading: "Manrope", sans-serif;
+  --font-body: "Inter", sans-serif;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-admin-bg);
+  color: var(--color-admin-ink);
+  overflow-x: hidden;
+}
+
+::selection {
+  background-color: var(--color-gold);
+  color: var(--color-obsidian);
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  background: var(--color-gold);
+  color: var(--color-obsidian);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.8125rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  text-decoration: none;
+}
+
+.btn-primary:hover {
+  background: var(--color-gold-bright);
+  box-shadow: 0 8px 30px rgba(200, 164, 78, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-primary:hover .btn-arrow {
+  transform: translateX(4px);
+}
+
+.btn-arrow {
+  transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}

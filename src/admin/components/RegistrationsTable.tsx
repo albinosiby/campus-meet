@@ -45,8 +45,7 @@ export function RegistrationsTable({
         reg.email.toLowerCase().includes(q) ||
         reg.college.toLowerCase().includes(q) ||
         reg.phone.toLowerCase().includes(q) ||
-        reg.course.toLowerCase().includes(q) ||
-        reg.transactionId.toLowerCase().includes(q)
+        reg.course.toLowerCase().includes(q)
       );
     });
   }, [registrations, query, zoneFilter, paymentFilter]);
@@ -70,7 +69,7 @@ export function RegistrationsTable({
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search name, txn ID, college…"
+              placeholder="Search name, college, phone…"
               className="w-full rounded-sm border border-admin-border bg-admin-elevated py-2.5 pl-9 pr-3 text-sm text-admin-ink placeholder:text-admin-muted/50 focus:border-gold/50 focus:outline-none sm:w-64"
             />
           </div>
@@ -110,7 +109,6 @@ export function RegistrationsTable({
               <th className="px-4 py-3 font-medium">College</th>
               <th className="px-4 py-3 font-medium">Zone</th>
               <th className="px-4 py-3 font-medium">Amount</th>
-              <th className="px-4 py-3 font-medium">Transaction ID</th>
               <th className="px-4 py-3 font-medium">Payment</th>
               <th className="px-5 py-3 font-medium md:px-6">Registered</th>
             </tr>
@@ -119,7 +117,7 @@ export function RegistrationsTable({
             {filtered.length === 0 ? (
               <tr>
                 <td
-                  colSpan={8}
+                  colSpan={7}
                   className="px-6 py-16 text-center text-sm text-admin-muted"
                 >
                   No registrations match your filters.
@@ -161,11 +159,6 @@ export function RegistrationsTable({
                   </td>
                   <td className="px-4 py-4 font-heading font-semibold tabular-nums text-admin-ink">
                     {formatCurrency(reg.amount)}
-                  </td>
-                  <td className="px-4 py-4">
-                    <code className="rounded-sm bg-admin-elevated px-2 py-1 font-mono text-[11px] text-admin-ink">
-                      {reg.transactionId || "—"}
-                    </code>
                   </td>
                   <td className="px-4 py-4">
                     <select

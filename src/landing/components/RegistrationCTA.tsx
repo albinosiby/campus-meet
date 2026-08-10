@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
-import { EVENT_INFO, EVENT_PAYMENT } from "@/landing/data/eventData";
+import { FeeNotice } from "@/landing/components/FeeNotice";
+import { EVENT_INFO } from "@/landing/data/eventData";
 
 export default function RegistrationCTA() {
   return (
@@ -30,13 +31,10 @@ export default function RegistrationCTA() {
           <p className="mt-6 font-body text-base text-cream-muted md:text-lg">
             Your campus. Your community. Your moment.
           </p>
-          <p className="mt-3 text-sm text-cream-muted/80">
-            Registration fee{" "}
-            <span className="font-heading font-semibold text-gold">
-              {EVENT_PAYMENT.currencySymbol}
-              {EVENT_PAYMENT.amount}
-            </span>
-          </p>
+
+          <div className="mt-8 w-full max-w-md text-left">
+            <FeeNotice variant="dark" />
+          </div>
 
           <div className="mt-10">
             <Link

@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { buildDashboardStats, formatCurrency } from "@/admin/analytics";
 import { getRegistrations, updatePaymentStatus } from "@/admin/storage";
 import type { PaymentStatus, Registration } from "@/admin/types";
+import { FeeNotice } from "@/landing/components/FeeNotice";
 import { AdminShell } from "./AdminShell";
 import { ExportMenu } from "./ExportMenu";
 import { PieChartCard } from "./PieChartCard";
@@ -70,7 +71,7 @@ export function Dashboard() {
   return (
     <AdminShell
       title="Registrations Dashboard"
-      subtitle="Live overview of campus meet sign-ups & payments"
+      subtitle="Live overview of campus meet sign-ups & fee collection"
     >
       {!loaded ? (
         <div className="flex h-64 items-center justify-center">
@@ -89,14 +90,16 @@ export function Dashboard() {
             </p>
           ) : null}
 
+          <FeeNotice variant="light" className="max-w-xl" />
+
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-xs font-heading uppercase tracking-[0.28em] text-gold-dim">
                 Reports & Analytics
               </p>
               <p className="mt-2 max-w-xl text-sm leading-relaxed text-admin-muted">
-                Track registrations, verify UPI payments, and export full
-                reports. Amount received so far:{" "}
+                Participants register free for now. Mark payment status when
+                the fee is collected later. Amount received so far:{" "}
                 <span className="font-heading font-semibold text-admin-ink">
                   {formatCurrency(stats.amountReceived)}
                 </span>
@@ -110,7 +113,7 @@ export function Dashboard() {
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <PieChartCard
               title="Payment Status"
-              description="Paid, pending verification, and unpaid registrations."
+              description="Paid vs unpaid — fees are collected after registration."
               data={stats.payments}
             />
             <PieChartCard

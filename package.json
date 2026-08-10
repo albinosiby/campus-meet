@@ -4,8 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:admin": "cd admin-web && ../node_modules/.bin/next dev -p 3001",
     "build": "next build",
+    "build:admin": "cd admin-web && ../node_modules/.bin/next build",
+    "build:all": "npm run build && npm run build:admin",
     "preview": "npx --yes serve out",
+    "preview:admin": "npx --yes serve admin-web/out -p 3001",
     "lint": "next lint"
   },
   "dependencies": {

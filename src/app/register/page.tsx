@@ -12,7 +12,7 @@ import type {
   YearOfStudy,
   Zone,
 } from "@/admin/types";
-import { PaymentDetails } from "@/landing/components/PaymentDetails";
+import { FeeNotice } from "@/landing/components/FeeNotice";
 import { EVENT_INFO, EVENT_PAYMENT } from "@/landing/data/eventData";
 import {
   clearRegistrationDraft,
@@ -56,17 +56,6 @@ export default function RegisterPage() {
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
-
-    const txn = draft.transactionId.trim();
-    if (!txn) {
-      setError("Enter your UPI transaction ID to complete registration.");
-      return;
-    }
-    if (txn.length < 6) {
-      setError("Please enter a valid transaction ID (at least 6 characters).");
-      return;
-    }
-
     setSubmitting(true);
 
     try {
@@ -82,8 +71,8 @@ export default function RegisterPage() {
         diocese: draft.diocese.trim(),
         dietary: (draft.dietary || "none") as Dietary,
         amount: EVENT_PAYMENT.amount,
-        transactionId: txn,
-        paymentStatus: "pending",
+        transactionId: "",
+        paymentStatus: "unpaid",
       });
       clearRegistrationDraft();
       setDraft(EMPTY_REGISTRATION_DRAFT);
@@ -177,9 +166,10 @@ export default function RegisterPage() {
                 You&apos;re registered
               </h2>
               <p className="mt-2 text-sm leading-relaxed text-cream-muted">
-                Thanks for signing up for {EVENT_INFO.name}. Your payment is
-                pending verification — we&apos;ll confirm once the transaction
-                ID is verified.
+                Thanks for signing up for {EVENT_INFO.name}. No payment is
+                needed now — the {EVENT_PAYMENT.currencySymbol}
+                {EVENT_PAYMENT.amount} registration fee will be collected
+                later.
               </p>
               <button
                 type="button"
@@ -424,38 +414,9 @@ export default function RegisterPage() {
 
               <fieldset className="space-y-4 pt-4 border-t border-obsidian-border">
                 <legend className="text-xs tracking-[0.2em] uppercase text-gold/60 font-heading mb-4">
-                  Payment
+                  Registration Fee
                 </legend>
-                <p className="text-sm text-cream-muted leading-relaxed">
-                  Pay the registration fee of {EVENT_PAYMENT.currencySymbol}
-                  {EVENT_PAYMENT.amount} via UPI, then enter your transaction ID
-                  below to complete registration.
-                </p>
-                <PaymentDetails variant="dark" />
-                <div>
-                  <label
-                    htmlFor="transactionId"
-                    className="block text-xs text-cream-muted mb-2 font-heading"
-                  >
-                    UPI Transaction ID *
-                  </label>
-                  <input
-                    type="text"
-                    id="transactionId"
-                    name="transactionId"
-                    required
-                    value={draft.transactionId}
-                    onChange={(e) =>
-                      updateField("transactionId", e.target.value)
-                    }
-                    className={fieldClass}
-                    placeholder="Enter UPI reference / transaction ID"
-                  />
-                  <p className="mt-2 text-[11px] text-cream-muted/50 leading-relaxed">
-                    Find this in your UPI app payment history after paying.
-                    Registration cannot be submitted without it.
-                  </p>
-                </div>
+                <FeeNotice variant="dark" />
               </fieldset>
 
               <div className="pt-6">
@@ -469,7 +430,7 @@ export default function RegisterPage() {
                 ) : null}
                 <button
                   type="submit"
-                  disabled={submitting || !draft.transactionId.trim()}
+                  disabled={submitting}
                   className="btn-primary w-full justify-center disabled:opacity-60"
                 >
                   {submitting ? "SUBMITTING…" : "SUBMIT REGISTRATION"}
