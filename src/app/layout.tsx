@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope, Inter } from "next/font/google";
+import { DevErrorFilter } from "@/shared/DevErrorFilter";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -52,7 +53,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${manrope.variable} ${inter.variable}`}>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <DevErrorFilter />
+        {children}
+      </body>
     </html>
   );
 }
