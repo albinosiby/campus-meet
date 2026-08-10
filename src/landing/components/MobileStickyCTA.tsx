@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { EVENT_INFO } from "@/data/eventData";
+import { EVENT_INFO } from "@/landing/data/eventData";
 
 export default function MobileStickyCTA() {
   const [visible, setVisible] = useState(false);

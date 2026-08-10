@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { EVENT_INFO } from "@/data/eventData";
+import { EVENT_INFO } from "@/landing/data/eventData";
 
 export default function FinalCTA() {
   const ref = useRef(null);

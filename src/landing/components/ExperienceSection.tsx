@@ -3,7 +3,7 @@
 import { useRef } from 'react';
 import Image from 'next/image';
 import { motion, useInView } from 'framer-motion';
-import { EXPERIENCES } from '@/data/eventData';
+import { EXPERIENCES } from '@/landing/data/eventData';
 
 export default function ExperienceSection() {
   const ref = useRef(null);

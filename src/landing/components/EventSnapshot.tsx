@@ -2,7 +2,7 @@
 
 import { useRef } from 'react';
 import { motion, useInView, type Variants } from 'framer-motion';
-import { SNAPSHOT_ITEMS } from '@/data/eventData';
+import { SNAPSHOT_ITEMS } from '@/landing/data/eventData';
 
 export default function EventSnapshot() {
   const sectionRef = useRef<HTMLDivElement>(null);

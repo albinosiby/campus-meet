@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { EVENT_INFO } from '@/data/eventData';
+import { EVENT_INFO } from '@/landing/data/eventData';
 
 export default function ThemeSection() {
   return (

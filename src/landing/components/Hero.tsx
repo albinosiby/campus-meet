@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRight, ChevronDown } from 'lucide-react';
-import { EVENT_INFO } from '@/data/eventData';
+import { EVENT_INFO } from '@/landing/data/eventData';
 
 export default function Hero() {
   return (

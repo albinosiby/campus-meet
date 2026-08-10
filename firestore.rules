@@ -1,0 +1,40 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isValidRegistrationCreate() {
+      return request.resource.data.keys().hasAll([
+          'fullName', 'email', 'phone', 'gender', 'college', 'course',
+          'year', 'zone', 'diocese', 'dietary', 'amount',
+          'transactionId', 'paymentStatus', 'createdAt'
+        ])
+        && request.resource.data.fullName is string
+        && request.resource.data.fullName.size() > 0
+        && request.resource.data.email is string
+        && request.resource.data.phone is string
+        && request.resource.data.transactionId is string
+        && request.resource.data.transactionId.size() >= 6
+        && request.resource.data.amount is number
+        && request.resource.data.paymentStatus == 'pending'
+        && request.resource.data.gender in ['male', 'female']
+        && request.resource.data.year in ['1', '2', '3', '4', '5', 'pg']
+        && request.resource.data.zone in ['kannur', 'kasargod', 'thalassery', 'kozhikode']
+        && request.resource.data.dietary in ['none', 'veg', 'nonveg'];
+    }
+
+    match /registrations/{registrationId} {
+      // Public form can create registrations
+      allow create: if isValidRegistrationCreate();
+
+      // Admin panel (password-gated in the app) can read reports
+      allow read: if true;
+
+      // Only paymentStatus may be updated
+      allow update: if request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['paymentStatus'])
+        && request.resource.data.paymentStatus in ['paid', 'unpaid', 'pending'];
+
+      allow delete: if false;
+    }
+  }
+}

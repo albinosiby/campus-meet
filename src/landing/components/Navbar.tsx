@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
-import { EVENT_INFO } from '@/data/eventData';
+import { EVENT_INFO } from '@/landing/data/eventData';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);

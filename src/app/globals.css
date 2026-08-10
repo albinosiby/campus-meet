@@ -12,6 +12,14 @@
   --color-gold-dim: #9a7b3a;
   --color-accent-blue: #3b82c4;
 
+  /* Admin light theme */
+  --color-admin-bg: #f3f4f7;
+  --color-admin-surface: #ffffff;
+  --color-admin-elevated: #fafbfc;
+  --color-admin-border: #e2e5ec;
+  --color-admin-ink: #15171f;
+  --color-admin-muted: #6a7080;
+
   --font-heading: "Manrope", sans-serif;
   --font-body: "Inter", sans-serif;
 }

@@ -21,6 +21,27 @@ export const EVENT_INFO = {
   registerUrl: "/register",
 };
 
+/** Update these when official payment details are confirmed. */
+export const EVENT_PAYMENT = {
+  amount: 500,
+  currency: "INR",
+  currencySymbol: "₹",
+  upiId: "jesusyouthmcm@upi",
+  payeeName: "Jesus Youth MCM",
+  note: "MCM 2026 Registration",
+} as const;
+
+export function buildUpiPayUrl(amount = EVENT_PAYMENT.amount): string {
+  const params = new URLSearchParams({
+    pa: EVENT_PAYMENT.upiId,
+    pn: EVENT_PAYMENT.payeeName,
+    am: String(amount),
+    cu: EVENT_PAYMENT.currency,
+    tn: EVENT_PAYMENT.note,
+  });
+  return `upi://pay?${params.toString()}`;
+}
+
 export const SNAPSHOT_ITEMS = [
   {
     label: "DATE",
@@ -83,34 +104,24 @@ export const EXPERIENCES = [
 
 export const GALLERY_IMAGES = [
   {
-    src: "/images/hero-bg.jpg",
-    alt: "Youth worship gathering with stage lights",
-    span: "col-span-2 row-span-2",
+    src: "/images/gallery-clapping.jpg",
+    alt: "Students smiling and clapping together at an evening campus gathering",
+    span: "col-span-2 row-span-1 md:row-span-2",
   },
   {
-    src: "/images/gallery-bus.jpg",
-    alt: "Students waving from campus bus",
+    src: "/images/gallery-adoration.jpg",
+    alt: "Silhouetted crowd with raised hands in worship before the Eucharist",
     span: "col-span-1 row-span-1",
   },
   {
-    src: "/images/gallery-prayer.jpg",
-    alt: "Youth praying together in a circle",
-    span: "col-span-1 row-span-2",
+    src: "/images/gallery-hands-up.jpg",
+    alt: "Campus meet participants raising their hands in shared enthusiasm",
+    span: "col-span-1 row-span-1 md:row-span-2",
   },
   {
-    src: "/images/about.jpg",
-    alt: "College students chatting on campus green",
-    span: "col-span-1 row-span-1",
-  },
-  {
-    src: "/images/gallery-celebration.jpg",
-    alt: "Students celebrating at campus event",
-    span: "col-span-2 row-span-1",
-  },
-  {
-    src: "/images/community.jpg",
-    alt: "Youth fellowship around bonfire",
-    span: "col-span-1 row-span-1",
+    src: "/images/gallery-circle.jpg",
+    alt: "Students sitting in a circle holding hands during campus meet",
+    span: "col-span-2 md:col-span-2 row-span-1",
   },
 ] as const;
 
@@ -123,7 +134,7 @@ export const FAQ_ITEMS = [
   {
     question: "What is the registration fee?",
     answer:
-      "Registration details including the fee will be announced soon. Follow our social media channels for the latest updates.",
+      "The registration fee is ₹500 per participant. Pay via UPI using the QR code or UPI ID on the registration form, then enter your transaction ID to complete registration.",
   },
   {
     question: "How do I register?",
@@ -133,7 +144,7 @@ export const FAQ_ITEMS = [
   {
     question: "How do I make the payment?",
     answer:
-      "Payment details will be provided during the registration process. Multiple payment methods will be available for your convenience.",
+      "On the registration form, scan the UPI QR code or copy the UPI ID, complete the payment of ₹500, then enter the UPI transaction ID to submit your registration.",
   },
   {
     question: "What should I bring?",
@@ -146,6 +157,14 @@ export const FAQ_ITEMS = [
       "The event will be held at Don Bosco Arts & Science College, Angadikadavu, Kerala. Detailed directions and transportation options will be shared after registration.",
   },
 ] as const;
+
+export const SCRIPTURE_QUOTES = {
+  gather: {
+    label: "Word of God",
+    text: "For where two or three are gathered in my name, there am I among them.",
+    reference: "Matthew 18:20",
+  },
+} as const;
 
 export const SOCIAL_LINKS = [
   {

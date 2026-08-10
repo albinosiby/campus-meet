@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { GALLERY_IMAGES } from '@/data/eventData';
+import { GALLERY_IMAGES } from '@/landing/data/eventData';
 
 export default function GallerySection() {
   const containerVariants = {
@@ -50,41 +50,11 @@ export default function GallerySection() {
           whileInView="visible"
           viewport={{ once: true, margin: '-100px' }}
         >
-          {GALLERY_IMAGES.map((img, index) => {
-            let spanClasses = '';
-            
-            // Desktop: grid-cols-3 auto-rows-[250px]
-            // Item 0: col-span-2 row-span-2
-            // Item 1: col-span-1 row-span-1
-            // Item 2: col-span-1 row-span-2
-            // Item 3: col-span-1 row-span-1
-            // Item 4: col-span-2 row-span-1
-            // Item 5: col-span-1 row-span-1
-            
-            // Mobile: grid-cols-2 auto-rows-[180px]
-            // First item col-span-2, rest col-span-1
-            
-            if (index === 0) {
-              spanClasses = 'col-span-2 row-span-1 md:row-span-2';
-            } else if (index === 1) {
-              spanClasses = 'col-span-1 row-span-1';
-            } else if (index === 2) {
-              spanClasses = 'col-span-1 row-span-1 md:row-span-2';
-            } else if (index === 3) {
-              spanClasses = 'col-span-1 row-span-1';
-            } else if (index === 4) {
-              spanClasses = 'col-span-1 md:col-span-2 row-span-1';
-            } else if (index === 5) {
-              spanClasses = 'col-span-1 row-span-1';
-            } else {
-              spanClasses = 'col-span-1 row-span-1';
-            }
-
-            return (
+          {GALLERY_IMAGES.map((img, index) => (
               <motion.div
-                key={index}
+                key={img.src}
                 variants={itemVariants}
-                className={`gallery-item group overflow-hidden relative ${spanClasses}`}
+                className={`gallery-item group overflow-hidden relative ${img.span}`}
               >
                 <Image
                   src={img.src}
@@ -92,13 +62,12 @@ export default function GallerySection() {
                   fill
                   style={{ objectFit: 'cover' }}
                   sizes="(max-width: 768px) 50vw, 33vw"
-                  loading="lazy"
+                  loading={index === 0 ? 'eager' : 'lazy'}
                   className="transition-transform duration-700 ease-out group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-obsidian/0 group-hover:bg-obsidian/20 transition-all duration-300 z-[1]" />
               </motion.div>
-            );
-          })}
+            ))}
         </motion.div>
       </div>
     </section>

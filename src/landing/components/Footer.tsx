@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { Instagram, MessageCircle, Youtube } from "lucide-react";
-import { EVENT_INFO } from "@/data/eventData";
+import { EVENT_INFO } from "@/landing/data/eventData";
 
 export default function Footer() {
   return (

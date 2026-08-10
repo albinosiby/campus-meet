@@ -1,25 +1,109 @@
 "use client";
 
-import { useRef } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { EVENT_INFO } from "@/data/eventData";
+import { addRegistration } from "@/admin/storage";
+import type {
+  Dietary,
+  Gender,
+  YearOfStudy,
+  Zone,
+} from "@/admin/types";
+import { PaymentDetails } from "@/landing/components/PaymentDetails";
+import { EVENT_INFO, EVENT_PAYMENT } from "@/landing/data/eventData";
+import {
+  clearRegistrationDraft,
+  EMPTY_REGISTRATION_DRAFT,
+  loadRegistrationDraft,
+  saveRegistrationDraft,
+  type RegistrationDraft,
+} from "@/landing/lib/registrationDraft";
+
+const fieldClass =
+  "w-full bg-obsidian-card border border-obsidian-border text-cream text-sm px-4 py-3 rounded-sm focus:border-gold/40 focus:outline-none transition-colors placeholder:text-cream-muted/40 font-body";
+
+const selectClass = `${fieldClass} appearance-none`;
 
 export default function RegisterPage() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState("");
+  const [draftReady, setDraftReady] = useState(false);
+  const [draft, setDraft] = useState<RegistrationDraft>(EMPTY_REGISTRATION_DRAFT);
+
+  useEffect(() => {
+    setDraft(loadRegistrationDraft());
+    setDraftReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!draftReady || submitted) return;
+    saveRegistrationDraft(draft);
+  }, [draft, draftReady, submitted]);
+
+  function updateField<K extends keyof RegistrationDraft>(
+    key: K,
+    value: RegistrationDraft[K]
+  ) {
+    setDraft((prev) => ({ ...prev, [key]: value }));
+  }
+
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError("");
+
+    const txn = draft.transactionId.trim();
+    if (!txn) {
+      setError("Enter your UPI transaction ID to complete registration.");
+      return;
+    }
+    if (txn.length < 6) {
+      setError("Please enter a valid transaction ID (at least 6 characters).");
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      await addRegistration({
+        fullName: draft.fullName.trim(),
+        email: draft.email.trim(),
+        phone: draft.phone.trim(),
+        gender: draft.gender as Gender,
+        college: draft.college.trim(),
+        course: draft.course.trim(),
+        year: draft.year as YearOfStudy,
+        zone: draft.zone as Zone,
+        diocese: draft.diocese.trim(),
+        dietary: (draft.dietary || "none") as Dietary,
+        amount: EVENT_PAYMENT.amount,
+        transactionId: txn,
+        paymentStatus: "pending",
+      });
+      clearRegistrationDraft();
+      setDraft(EMPTY_REGISTRATION_DRAFT);
+      setSubmitted(true);
+    } catch {
+      setError(
+        "Could not save registration. Check your connection and try again."
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-obsidian relative overflow-hidden">
-      {/* Background decoration */}
       <div className="absolute inset-0 pointer-events-none select-none">
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gold/[0.03] rounded-full blur-[150px]" />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent-blue/[0.03] rounded-full blur-[120px]" />
       </div>
 
-      {/* Nav */}
       <nav className="relative z-10 max-w-7xl mx-auto section-pad py-6 flex items-center justify-between">
         <Link
           href="/"
@@ -40,7 +124,6 @@ export default function RegisterPage() {
         </div>
       </nav>
 
-      {/* Content */}
       <div className="relative z-10 max-w-2xl mx-auto section-pad py-12 md:py-20">
         <motion.div
           ref={ref}
@@ -48,7 +131,6 @@ export default function RegisterPage() {
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
         >
-          {/* Header */}
           <p className="text-xs tracking-[0.3em] uppercase text-gold font-heading mb-4">
             REGISTRATION
           </p>
@@ -63,7 +145,6 @@ export default function RegisterPage() {
           </p>
           <div className="w-16 h-px bg-gold/40 mt-6 mb-10" />
 
-          {/* Event Info Card */}
           <div className="glass-card rounded-sm p-6 mb-10">
             <div className="flex items-start gap-4">
               <div className="w-16 h-16 relative rounded-sm overflow-hidden flex-shrink-0">
@@ -89,210 +170,318 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* Registration Form */}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              /* Firebase integration placeholder */
-            }}
-            className="space-y-6"
-          >
-            {/* Personal Details */}
-            <fieldset className="space-y-4">
-              <legend className="text-xs tracking-[0.2em] uppercase text-gold/60 font-heading mb-4">
-                Personal Details
-              </legend>
+          {submitted ? (
+            <div className="glass-card rounded-sm p-8 text-center">
+              <CheckCircle2 className="mx-auto h-10 w-10 text-gold" />
+              <h2 className="mt-4 font-heading text-2xl font-bold text-cream">
+                You&apos;re registered
+              </h2>
+              <p className="mt-2 text-sm leading-relaxed text-cream-muted">
+                Thanks for signing up for {EVENT_INFO.name}. Your payment is
+                pending verification — we&apos;ll confirm once the transaction
+                ID is verified.
+              </p>
+              <button
+                type="button"
+                onClick={() => setSubmitted(false)}
+                className="btn-outline mt-8 inline-flex"
+              >
+                Register another person
+              </button>
+            </div>
+          ) : !draftReady ? (
+            <div className="flex h-40 items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-gold/30 border-t-gold" />
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <p className="text-[11px] text-cream-muted/50">
+                Your answers are saved automatically as you type.
+              </p>
 
-              <div>
-                <label
-                  htmlFor="fullName"
-                  className="block text-xs text-cream-muted mb-2 font-heading"
-                >
-                  Full Name *
-                </label>
-                <input
-                  type="text"
-                  id="fullName"
-                  name="fullName"
-                  required
-                  className="w-full bg-obsidian-card border border-obsidian-border text-cream text-sm px-4 py-3 rounded-sm focus:border-gold/40 focus:outline-none transition-colors placeholder:text-cream-muted/40 font-body"
-                  placeholder="Enter your full name"
-                />
-              </div>
+              <fieldset className="space-y-4">
+                <legend className="text-xs tracking-[0.2em] uppercase text-gold/60 font-heading mb-4">
+                  Personal Details
+                </legend>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label
-                    htmlFor="email"
+                    htmlFor="fullName"
                     className="block text-xs text-cream-muted mb-2 font-heading"
                   >
-                    Email *
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    required
-                    className="w-full bg-obsidian-card border border-obsidian-border text-cream text-sm px-4 py-3 rounded-sm focus:border-gold/40 focus:outline-none transition-colors placeholder:text-cream-muted/40 font-body"
-                    placeholder="you@email.com"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="phone"
-                    className="block text-xs text-cream-muted mb-2 font-heading"
-                  >
-                    Phone *
-                  </label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    required
-                    className="w-full bg-obsidian-card border border-obsidian-border text-cream text-sm px-4 py-3 rounded-sm focus:border-gold/40 focus:outline-none transition-colors placeholder:text-cream-muted/40 font-body"
-                    placeholder="+91 XXXXX XXXXX"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="gender"
-                  className="block text-xs text-cream-muted mb-2 font-heading"
-                >
-                  Gender *
-                </label>
-                <select
-                  id="gender"
-                  name="gender"
-                  required
-                  className="w-full bg-obsidian-card border border-obsidian-border text-cream text-sm px-4 py-3 rounded-sm focus:border-gold/40 focus:outline-none transition-colors font-body appearance-none"
-                >
-                  <option value="">Select</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                </select>
-              </div>
-            </fieldset>
-
-            {/* College Info */}
-            <fieldset className="space-y-4 pt-4 border-t border-obsidian-border">
-              <legend className="text-xs tracking-[0.2em] uppercase text-gold/60 font-heading mb-4">
-                College / Campus Info
-              </legend>
-
-              <div>
-                <label
-                  htmlFor="college"
-                  className="block text-xs text-cream-muted mb-2 font-heading"
-                >
-                  College / University *
-                </label>
-                <input
-                  type="text"
-                  id="college"
-                  name="college"
-                  required
-                  className="w-full bg-obsidian-card border border-obsidian-border text-cream text-sm px-4 py-3 rounded-sm focus:border-gold/40 focus:outline-none transition-colors placeholder:text-cream-muted/40 font-body"
-                  placeholder="Your college name"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label
-                    htmlFor="course"
-                    className="block text-xs text-cream-muted mb-2 font-heading"
-                  >
-                    Course / Program *
+                    Full Name *
                   </label>
                   <input
                     type="text"
-                    id="course"
-                    name="course"
+                    id="fullName"
+                    name="fullName"
                     required
-                    className="w-full bg-obsidian-card border border-obsidian-border text-cream text-sm px-4 py-3 rounded-sm focus:border-gold/40 focus:outline-none transition-colors placeholder:text-cream-muted/40 font-body"
-                    placeholder="e.g. B.Tech, BA, BSc"
+                    value={draft.fullName}
+                    onChange={(e) => updateField("fullName", e.target.value)}
+                    className={fieldClass}
+                    placeholder="Enter your full name"
                   />
                 </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      htmlFor="email"
+                      className="block text-xs text-cream-muted mb-2 font-heading"
+                    >
+                      Email *
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      required
+                      value={draft.email}
+                      onChange={(e) => updateField("email", e.target.value)}
+                      className={fieldClass}
+                      placeholder="you@email.com"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="phone"
+                      className="block text-xs text-cream-muted mb-2 font-heading"
+                    >
+                      Phone *
+                    </label>
+                    <input
+                      type="tel"
+                      id="phone"
+                      name="phone"
+                      required
+                      value={draft.phone}
+                      onChange={(e) => updateField("phone", e.target.value)}
+                      className={fieldClass}
+                      placeholder="+91 XXXXX XXXXX"
+                    />
+                  </div>
+                </div>
+
                 <div>
                   <label
-                    htmlFor="year"
+                    htmlFor="gender"
                     className="block text-xs text-cream-muted mb-2 font-heading"
                   >
-                    Year of Study *
+                    Gender *
                   </label>
                   <select
-                    id="year"
-                    name="year"
+                    id="gender"
+                    name="gender"
                     required
-                    className="w-full bg-obsidian-card border border-obsidian-border text-cream text-sm px-4 py-3 rounded-sm focus:border-gold/40 focus:outline-none transition-colors font-body appearance-none"
+                    value={draft.gender}
+                    onChange={(e) => updateField("gender", e.target.value)}
+                    className={selectClass}
                   >
                     <option value="">Select</option>
-                    <option value="1">1st Year</option>
-                    <option value="2">2nd Year</option>
-                    <option value="3">3rd Year</option>
-                    <option value="4">4th Year</option>
-                    <option value="5">5th Year</option>
-                    <option value="pg">PG</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
                   </select>
                 </div>
-              </div>
+              </fieldset>
 
-              <div>
-                <label
-                  htmlFor="diocese"
-                  className="block text-xs text-cream-muted mb-2 font-heading"
+              <fieldset className="space-y-4 pt-4 border-t border-obsidian-border">
+                <legend className="text-xs tracking-[0.2em] uppercase text-gold/60 font-heading mb-4">
+                  College / Campus Info
+                </legend>
+
+                <div>
+                  <label
+                    htmlFor="college"
+                    className="block text-xs text-cream-muted mb-2 font-heading"
+                  >
+                    College / University *
+                  </label>
+                  <input
+                    type="text"
+                    id="college"
+                    name="college"
+                    required
+                    value={draft.college}
+                    onChange={(e) => updateField("college", e.target.value)}
+                    className={fieldClass}
+                    placeholder="Your college name"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      htmlFor="course"
+                      className="block text-xs text-cream-muted mb-2 font-heading"
+                    >
+                      Course / Program *
+                    </label>
+                    <input
+                      type="text"
+                      id="course"
+                      name="course"
+                      required
+                      value={draft.course}
+                      onChange={(e) => updateField("course", e.target.value)}
+                      className={fieldClass}
+                      placeholder="e.g. B.Tech, BA, BSc"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="year"
+                      className="block text-xs text-cream-muted mb-2 font-heading"
+                    >
+                      Year of Study *
+                    </label>
+                    <select
+                      id="year"
+                      name="year"
+                      required
+                      value={draft.year}
+                      onChange={(e) => updateField("year", e.target.value)}
+                      className={selectClass}
+                    >
+                      <option value="">Select</option>
+                      <option value="1">1st Year</option>
+                      <option value="2">2nd Year</option>
+                      <option value="3">3rd Year</option>
+                      <option value="4">4th Year</option>
+                      <option value="5">5th Year</option>
+                      <option value="pg">PG</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      htmlFor="zone"
+                      className="block text-xs text-cream-muted mb-2 font-heading"
+                    >
+                      Zone *
+                    </label>
+                    <select
+                      id="zone"
+                      name="zone"
+                      required
+                      value={draft.zone}
+                      onChange={(e) => updateField("zone", e.target.value)}
+                      className={selectClass}
+                    >
+                      <option value="">Select zone</option>
+                      <option value="kannur">Kannur</option>
+                      <option value="kasargod">Kasargod</option>
+                      <option value="thalassery">Thalassery</option>
+                      <option value="kozhikode">Kozhikode</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="diocese"
+                      className="block text-xs text-cream-muted mb-2 font-heading"
+                    >
+                      Diocese / Parish
+                    </label>
+                    <input
+                      type="text"
+                      id="diocese"
+                      name="diocese"
+                      value={draft.diocese}
+                      onChange={(e) => updateField("diocese", e.target.value)}
+                      className={fieldClass}
+                      placeholder="Optional"
+                    />
+                  </div>
+                </div>
+              </fieldset>
+
+              <fieldset className="space-y-4 pt-4 border-t border-obsidian-border">
+                <legend className="text-xs tracking-[0.2em] uppercase text-gold/60 font-heading mb-4">
+                  Preferences
+                </legend>
+
+                <div>
+                  <label
+                    htmlFor="dietary"
+                    className="block text-xs text-cream-muted mb-2 font-heading"
+                  >
+                    Dietary Preferences
+                  </label>
+                  <select
+                    id="dietary"
+                    name="dietary"
+                    value={draft.dietary}
+                    onChange={(e) => updateField("dietary", e.target.value)}
+                    className={selectClass}
+                  >
+                    <option value="none">No preference</option>
+                    <option value="veg">Vegetarian</option>
+                    <option value="nonveg">Non-Vegetarian</option>
+                  </select>
+                </div>
+              </fieldset>
+
+              <fieldset className="space-y-4 pt-4 border-t border-obsidian-border">
+                <legend className="text-xs tracking-[0.2em] uppercase text-gold/60 font-heading mb-4">
+                  Payment
+                </legend>
+                <p className="text-sm text-cream-muted leading-relaxed">
+                  Pay the registration fee of {EVENT_PAYMENT.currencySymbol}
+                  {EVENT_PAYMENT.amount} via UPI, then enter your transaction ID
+                  below to complete registration.
+                </p>
+                <PaymentDetails variant="dark" />
+                <div>
+                  <label
+                    htmlFor="transactionId"
+                    className="block text-xs text-cream-muted mb-2 font-heading"
+                  >
+                    UPI Transaction ID *
+                  </label>
+                  <input
+                    type="text"
+                    id="transactionId"
+                    name="transactionId"
+                    required
+                    value={draft.transactionId}
+                    onChange={(e) =>
+                      updateField("transactionId", e.target.value)
+                    }
+                    className={fieldClass}
+                    placeholder="Enter UPI reference / transaction ID"
+                  />
+                  <p className="mt-2 text-[11px] text-cream-muted/50 leading-relaxed">
+                    Find this in your UPI app payment history after paying.
+                    Registration cannot be submitted without it.
+                  </p>
+                </div>
+              </fieldset>
+
+              <div className="pt-6">
+                {error ? (
+                  <p
+                    className="mb-3 text-center text-xs text-red-400/90"
+                    role="alert"
+                  >
+                    {error}
+                  </p>
+                ) : null}
+                <button
+                  type="submit"
+                  disabled={submitting || !draft.transactionId.trim()}
+                  className="btn-primary w-full justify-center disabled:opacity-60"
                 >
-                  Diocese / Parish
-                </label>
-                <input
-                  type="text"
-                  id="diocese"
-                  name="diocese"
-                  className="w-full bg-obsidian-card border border-obsidian-border text-cream text-sm px-4 py-3 rounded-sm focus:border-gold/40 focus:outline-none transition-colors placeholder:text-cream-muted/40 font-body"
-                  placeholder="Optional"
-                />
+                  {submitting ? "SUBMITTING…" : "SUBMIT REGISTRATION"}
+                  <ArrowRight className="w-4 h-4 btn-arrow" />
+                </button>
+                <p className="text-[11px] text-cream-muted/40 text-center mt-4 leading-relaxed">
+                  By registering, you agree to receive event-related
+                  communications. Your details will be handled securely.
+                </p>
               </div>
-            </fieldset>
-
-            {/* Preferences */}
-            <fieldset className="space-y-4 pt-4 border-t border-obsidian-border">
-              <legend className="text-xs tracking-[0.2em] uppercase text-gold/60 font-heading mb-4">
-                Preferences
-              </legend>
-
-              <div>
-                <label
-                  htmlFor="dietary"
-                  className="block text-xs text-cream-muted mb-2 font-heading"
-                >
-                  Dietary Preferences
-                </label>
-                <select
-                  id="dietary"
-                  name="dietary"
-                  className="w-full bg-obsidian-card border border-obsidian-border text-cream text-sm px-4 py-3 rounded-sm focus:border-gold/40 focus:outline-none transition-colors font-body appearance-none"
-                >
-                  <option value="none">No preference</option>
-                  <option value="veg">Vegetarian</option>
-                  <option value="nonveg">Non-Vegetarian</option>
-                </select>
-              </div>
-            </fieldset>
-
-            {/* Submit */}
-            <div className="pt-6">
-              <button type="submit" className="btn-primary w-full justify-center">
-                SUBMIT REGISTRATION
-                <ArrowRight className="w-4 h-4 btn-arrow" />
-              </button>
-              <p className="text-[11px] text-cream-muted/40 text-center mt-4 leading-relaxed">
-                By registering, you agree to receive event-related communications.
-                Your details will be handled securely.
-              </p>
-            </div>
-          </form>
+            </form>
+          )}
         </motion.div>
       </div>
     </div>

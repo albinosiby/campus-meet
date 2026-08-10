@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import { Plus, Minus } from "lucide-react";
-import { FAQ_ITEMS } from "@/data/eventData";
+import { FAQ_ITEMS } from "@/landing/data/eventData";
 
 export default function FAQSection() {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
