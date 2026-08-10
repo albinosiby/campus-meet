@@ -37,6 +37,10 @@ export const metadata: Metadata = {
     "Angadikadavu",
     "Don Bosco",
   ],
+  icons: {
+    icon: [{ url: "/images/jy-logo.png", type: "image/png" }],
+    apple: [{ url: "/images/jy-logo.png" }],
+  },
   openGraph: {
     title: "Malabar Campus Meet 2026 | Jesus Youth",
     description:

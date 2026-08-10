@@ -2,14 +2,16 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { motion } from "framer-motion";
-import { LockKeyhole, ArrowRight } from "lucide-react";
+import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import { loginAdmin } from "@/admin/auth";
 import { EVENT_INFO } from "@/landing/data/eventData";
 
 export function LoginForm() {
   const router = useRouter();
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -43,8 +45,15 @@ export function LoginForm() {
           className="rounded-sm border border-admin-border bg-admin-surface p-8 shadow-sm md:p-10"
         >
           <div className="mb-8">
-            <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-sm border border-gold/30 bg-gold/10">
-              <LockKeyhole className="h-5 w-5 text-gold-dim" />
+            <div className="relative mb-6 h-14 w-14 overflow-hidden rounded-full border border-gold/30 shadow-sm">
+              <Image
+                src="/images/jy-logo.png"
+                alt="Jesus Youth"
+                fill
+                className="object-cover"
+                sizes="56px"
+                priority
+              />
             </div>
             <p className="mb-3 text-xs font-heading uppercase tracking-[0.3em] text-gold-dim">
               Restricted Access
@@ -66,16 +75,30 @@ export function LoginForm() {
               >
                 Password
               </label>
-              <input
-                id="admin-password"
-                type="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full rounded-sm border border-admin-border bg-admin-elevated px-4 py-3 text-sm text-admin-ink placeholder:text-admin-muted/50 focus:border-gold/50 focus:outline-none"
-                placeholder="Enter admin password"
-              />
+              <div className="relative">
+                <input
+                  id="admin-password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="w-full rounded-sm border border-admin-border bg-admin-elevated py-3 pl-4 pr-12 text-sm text-admin-ink placeholder:text-admin-muted/50 focus:border-gold/50 focus:outline-none"
+                  placeholder="Enter admin password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-sm text-admin-muted transition-colors hover:text-admin-ink"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
             </div>
 
             {error ? (

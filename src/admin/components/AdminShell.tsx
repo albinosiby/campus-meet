@@ -2,7 +2,8 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, LayoutDashboard } from "lucide-react";
+import Image from "next/image";
+import { LogOut } from "lucide-react";
 import { isAdminAuthenticated, logoutAdmin } from "@/admin/auth";
 import { EVENT_INFO } from "@/landing/data/eventData";
 
@@ -47,8 +48,15 @@ export function AdminShell({ children, title, subtitle }: AdminShellProps) {
       <header className="relative z-20 border-b border-admin-border bg-admin-surface/90 shadow-sm backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 md:px-8">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-sm border border-gold/25 bg-gold/10">
-              <LayoutDashboard className="h-4 w-4 text-gold-dim" />
+            <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full border border-gold/25">
+              <Image
+                src="/images/jy-logo.png"
+                alt="Jesus Youth"
+                fill
+                className="object-cover"
+                sizes="40px"
+                priority
+              />
             </div>
             <div className="min-w-0">
               <p className="truncate text-[10px] font-heading uppercase tracking-[0.28em] text-gold-dim">

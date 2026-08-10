@@ -26,6 +26,10 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "Admin | Malabar Campus Meet 2026",
   description: "Registration reports and payment verification for Malabar Campus Meet.",
+  icons: {
+    icon: [{ url: "/images/jy-logo.png", type: "image/png" }],
+    apple: [{ url: "/images/jy-logo.png" }],
+  },
   robots: {
     index: false,
     follow: false,
