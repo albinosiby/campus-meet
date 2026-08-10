@@ -5,6 +5,7 @@ export const ZONE_LABELS: Record<Zone, string> = {
   kasargod: "Kasargod",
   thalassery: "Thalassery",
   kozhikode: "Kozhikode",
+  mananthavady: "Mananthavady",
 };
 
 export const GENDER_LABELS: Record<Gender, string> = {
@@ -38,6 +39,7 @@ export const ZONE_COLORS: Record<Zone, string> = {
   kasargod: "#3b82c4",
   thalassery: "#e0ba5a",
   kozhikode: "#7c9eb2",
+  mananthavady: "#8b6f47",
 };
 
 export const GENDER_COLORS: Record<Gender, string> = {

@@ -1,9 +1,11 @@
 import Image from "next/image";
-import { Instagram, MessageCircle, Youtube } from "lucide-react";
-import { EVENT_INFO } from "@/landing/data/eventData";
+import { Instagram } from "lucide-react";
+import { EVENT_INFO, SOCIAL_LINKS } from "@/landing/data/eventData";
 import { EventWordmark } from "@/shared/components/EventWordmark";
 
 export default function Footer() {
+  const instagram = SOCIAL_LINKS[0];
+
   return (
     <footer className="bg-obsidian-light border-t border-obsidian-border">
       <div className="max-w-7xl mx-auto section-pad py-16">
@@ -28,30 +30,16 @@ export default function Footer() {
             GATHER &bull; GROW &bull; GO
           </p>
 
-          {/* Social */}
-          <div className="flex items-center gap-5">
-            <a
-              href="#"
-              aria-label="Follow us on Instagram"
-              className="text-cream-muted hover:text-gold transition-colors duration-300"
-            >
-              <Instagram className="w-5 h-5" />
-            </a>
-            <a
-              href="#"
-              aria-label="Join our WhatsApp group"
-              className="text-cream-muted hover:text-gold transition-colors duration-300"
-            >
-              <MessageCircle className="w-5 h-5" />
-            </a>
-            <a
-              href="#"
-              aria-label="Watch on YouTube"
-              className="text-cream-muted hover:text-gold transition-colors duration-300"
-            >
-              <Youtube className="w-5 h-5" />
-            </a>
-          </div>
+          {/* Social — Instagram only */}
+          <a
+            href={instagram.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="View on Instagram"
+            className="text-cream-muted hover:text-gold transition-colors duration-300"
+          >
+            <Instagram className="w-5 h-5" />
+          </a>
         </div>
 
         {/* Mobile Tagline */}

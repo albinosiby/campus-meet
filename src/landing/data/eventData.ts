@@ -15,6 +15,7 @@ export const EVENT_INFO = {
   dateShort: "Sep 18–21",
   venue: "Don Bosco Arts & Science College",
   venueLocation: "Angadikadavu",
+  venueMapsUrl: "https://maps.app.goo.gl/p9pcmKgKoyFak8GVA",
   target: "Campus Students",
   description:
     "A gathering of campus youth to encounter, connect, grow and live the mission together.",
@@ -171,7 +172,7 @@ export const FAQ_ITEMS = [
   {
     question: "Where is the venue?",
     answer:
-      "The event will be held at Don Bosco Arts & Science College, Angadikadavu, Kerala. Detailed directions and transportation options will be shared after registration.",
+      "The event will be held at Don Bosco Arts & Science College, Angadikadavu, Kerala. Open the location on Google Maps from the Event details section on this page.",
   },
 ] as const;
 
@@ -186,17 +187,7 @@ export const SCRIPTURE_QUOTES = {
 export const SOCIAL_LINKS = [
   {
     name: "Instagram",
-    url: "#",
+    url: "https://www.instagram.com/p/Db3QgVfv3hn/?igsh=MW9sdTRvcnk0Nm81aQ==",
     icon: "instagram",
-  },
-  {
-    name: "WhatsApp",
-    url: "#",
-    icon: "whatsapp",
-  },
-  {
-    name: "YouTube",
-    url: "#",
-    icon: "youtube",
   },
 ] as const;

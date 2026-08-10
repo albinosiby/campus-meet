@@ -386,6 +386,7 @@ export default function RegisterPage() {
                           <option value="kasargod">Kasargod</option>
                           <option value="thalassery">Thalassery</option>
                           <option value="kozhikode">Kozhikode</option>
+                          <option value="mananthavady">Mananthavady</option>
                         </select>
                       </div>
                       <div>

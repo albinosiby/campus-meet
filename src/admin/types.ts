@@ -1,4 +1,9 @@
-export type Zone = "kannur" | "kasargod" | "thalassery" | "kozhikode";
+export type Zone =
+  | "kannur"
+  | "kasargod"
+  | "thalassery"
+  | "kozhikode"
+  | "mananthavady";
 export type Gender = "male" | "female";
 export type YearOfStudy = "1" | "2" | "3" | "4" | "5" | "pg";
 export type Dietary = "none" | "veg" | "nonveg";

@@ -2,7 +2,8 @@
 
 import { useRef } from 'react';
 import { motion, useInView, type Variants } from 'framer-motion';
-import { SNAPSHOT_ITEMS } from '@/landing/data/eventData';
+import { ExternalLink, MapPin } from 'lucide-react';
+import { EVENT_INFO, SNAPSHOT_ITEMS } from '@/landing/data/eventData';
 
 export default function EventSnapshot() {
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -107,6 +108,7 @@ export default function EventSnapshot() {
               const showMobileColDivider = index % 2 === 0;
               const showMobileRowDivider = index < 2;
               const indexLabel = String(index + 1).padStart(2, '0');
+              const isVenue = item.label === 'VENUE';
 
               return (
                 <motion.div
@@ -151,7 +153,20 @@ export default function EventSnapshot() {
                     </p>
                   )}
 
-                  <div className="mt-6 h-px w-0 group-hover:w-10 bg-gradient-to-r from-transparent via-gold/60 to-transparent transition-all duration-500 ease-out" />
+                  {isVenue ? (
+                    <a
+                      href={EVENT_INFO.venueMapsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-4 inline-flex items-center gap-1.5 text-[10px] font-heading font-semibold uppercase tracking-[0.2em] text-gold-dim transition-colors hover:text-gold"
+                    >
+                      <MapPin className="h-3 w-3" />
+                      Open in Maps
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  ) : (
+                    <div className="mt-6 h-px w-0 group-hover:w-10 bg-gradient-to-r from-transparent via-gold/60 to-transparent transition-all duration-500 ease-out" />
+                  )}
                 </motion.div>
               );
             })}

@@ -17,7 +17,7 @@ service cloud.firestore {
         && request.resource.data.paymentStatus == 'unpaid'
         && request.resource.data.gender in ['male', 'female']
         && request.resource.data.year in ['1', '2', '3', '4', '5', 'pg']
-        && request.resource.data.zone in ['kannur', 'kasargod', 'thalassery', 'kozhikode']
+        && request.resource.data.zone in ['kannur', 'kasargod', 'thalassery', 'kozhikode', 'mananthavady']
         && request.resource.data.dietary in ['none', 'veg', 'nonveg'];
     }
 
