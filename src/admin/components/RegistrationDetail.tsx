@@ -72,8 +72,12 @@ export function RegistrationDetail({
     setDeleting(true);
     try {
       await onDelete(reg.id);
-    } catch {
-      setDeleteError("Could not delete this registration. Try again.");
+    } catch (error) {
+      setDeleteError(
+        error instanceof Error
+          ? error.message
+          : "Could not delete this registration. Try again."
+      );
       setDeleting(false);
       setConfirmDelete(false);
     }

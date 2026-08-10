@@ -113,11 +113,11 @@ export function RegistrationPass({
                 </p>
               </div>
               <div className="rounded-sm border border-gold/30 bg-gold/10 px-3 py-2 text-right">
-                <p className="text-[10px] font-heading uppercase tracking-[0.2em] text-gold">
-                  MCM
+                <p className="text-[10px] font-heading uppercase tracking-[0.42em] text-gold">
+                  {EVENT_INFO.abbreviation}&nbsp;{EVENT_INFO.shortYear}
                 </p>
-                <p className="font-heading text-lg font-bold text-cream">
-                  {EVENT_INFO.shortYear}
+                <p className="mt-1 text-[9px] font-heading uppercase tracking-[0.12em] text-cream-muted">
+                  {EVENT_INFO.name}
                 </p>
               </div>
             </div>

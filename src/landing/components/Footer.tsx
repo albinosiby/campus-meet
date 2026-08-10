@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Instagram, MessageCircle, Youtube } from "lucide-react";
 import { EVENT_INFO } from "@/landing/data/eventData";
+import { McmWordmark } from "@/shared/components/McmWordmark";
 
 export default function Footer() {
   return (
@@ -19,14 +20,7 @@ export default function Footer() {
                 sizes="40px"
               />
             </div>
-            <div>
-              <p className="text-lg font-heading font-extrabold text-cream leading-tight">
-                JESUS YOUTH
-              </p>
-              <p className="text-xs tracking-[0.2em] text-gold uppercase mt-0.5">
-                MALABAR CAMPUS MEET {EVENT_INFO.shortYear}
-              </p>
-            </div>
+            <McmWordmark size="md" showFullName />
           </div>
 
           {/* Tagline */}
@@ -68,7 +62,8 @@ export default function Footer() {
         {/* Bottom */}
         <div className="mt-12 pt-8 border-t border-obsidian-border">
           <p className="text-xs text-cream-muted/50 text-center">
-            &copy; {EVENT_INFO.year} Jesus Youth Malabar
+            &copy; {EVENT_INFO.year} Jesus Youth Malabar · {EVENT_INFO.abbreviation}{" "}
+            {EVENT_INFO.shortYear}
           </p>
         </div>
       </div>

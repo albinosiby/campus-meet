@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import { EVENT_INFO } from '@/landing/data/eventData';
+import { McmWordmark } from '@/shared/components/McmWordmark';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -50,7 +51,6 @@ export default function Navbar() {
           {/* Logo Area */}
           <div className="flex-shrink-0 flex items-center">
             <Link href="/" className="flex items-center gap-3 group no-underline">
-              {/* Official JY Logo Emblem */}
               <div className="relative w-10 h-10 md:w-11 md:h-11 rounded-full overflow-hidden border border-gold/30 group-hover:border-gold transition-colors flex-shrink-0 shadow-lg shadow-gold/10">
                 <Image
                   src="/images/jy-logo.png"
@@ -61,23 +61,11 @@ export default function Navbar() {
                   priority
                 />
               </div>
-              {/* Desktop Logo Text */}
-              <div className="hidden md:flex flex-col">
-                <span className="font-heading font-bold text-cream text-xl leading-tight tracking-tight">
-                  JESUS YOUTH
-                </span>
-                <span className="font-heading text-[10px] tracking-[0.12em] text-gold leading-tight mt-0.5 font-semibold">
-                  Malabar Campus Meets 2026
-                </span>
+              <div className="hidden md:block">
+                <McmWordmark size="md" />
               </div>
-              {/* Mobile Logo Text */}
-              <div className="flex md:hidden flex-col">
-                <span className="font-heading font-bold text-cream text-sm leading-tight">
-                  JESUS YOUTH
-                </span>
-                <span className="font-heading text-[8px] tracking-[0.08em] text-gold font-semibold">
-                  Malabar Campus Meets 2026
-                </span>
+              <div className="md:hidden">
+                <McmWordmark size="sm" />
               </div>
             </Link>
           </div>

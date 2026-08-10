@@ -10,7 +10,8 @@
     "build:all": "npm run build && npm run build:admin",
     "preview": "npx --yes serve out",
     "preview:admin": "npx --yes serve admin-web/out -p 3001",
-    "lint": "next lint"
+    "lint": "next lint",
+    "deploy:rules": "firebase deploy --only firestore:rules"
   },
   "dependencies": {
     "clsx": "^2.1.1",

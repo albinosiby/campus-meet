@@ -5,6 +5,8 @@
 
 export const EVENT_INFO = {
   name: "Malabar Campus Meet",
+  /** Official short mark — Malabar Campus Meet */
+  abbreviation: "MCM",
   year: "2026",
   shortYear: "'26",
   organizer: "Jesus Youth",

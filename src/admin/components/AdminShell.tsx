@@ -60,7 +60,7 @@ export function AdminShell({ children, title, subtitle }: AdminShellProps) {
             </div>
             <div className="min-w-0">
               <p className="truncate text-[10px] font-heading uppercase tracking-[0.28em] text-gold-dim">
-                Admin · MCM {EVENT_INFO.shortYear}
+                Admin · {EVENT_INFO.abbreviation} {EVENT_INFO.shortYear}
               </p>
               <h1 className="truncate font-heading text-lg font-bold text-admin-ink md:text-xl">
                 {title}

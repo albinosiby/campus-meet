@@ -56,7 +56,7 @@ export function LoginForm() {
               />
             </div>
             <p className="mb-3 text-xs font-heading uppercase tracking-[0.3em] text-gold-dim">
-              Restricted Access
+              {EVENT_INFO.abbreviation} {EVENT_INFO.shortYear} · Restricted Access
             </p>
             <h1 className="font-heading text-3xl font-extrabold tracking-tight text-admin-ink md:text-4xl">
               Admin Panel

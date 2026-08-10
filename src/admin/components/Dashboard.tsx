@@ -69,16 +69,17 @@ export function Dashboard() {
   }
 
   async function handleDelete(id: string) {
-    const previous = registrations;
-    setRegistrations((rows) => rows.filter((row) => row.id !== id));
-
     try {
       await deleteRegistration(id);
+      setRegistrations((rows) => rows.filter((row) => row.id !== id));
       setLoadError("");
-    } catch {
-      setRegistrations(previous);
-      setLoadError("Could not delete registration. Try again.");
-      throw new Error("delete failed");
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Could not delete registration. Try again.";
+      setLoadError(message);
+      throw error instanceof Error ? error : new Error(message);
     }
   }
 

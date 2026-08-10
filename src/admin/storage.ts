@@ -148,5 +148,20 @@ export async function submitRegistrationPayment(
 }
 
 export async function deleteRegistration(id: string): Promise<void> {
-  await deleteDoc(doc(getFirebaseDb(), REGISTRATIONS_COLLECTION, id));
+  try {
+    await deleteDoc(doc(getFirebaseDb(), REGISTRATIONS_COLLECTION, id));
+  } catch (error) {
+    const code =
+      error && typeof error === "object" && "code" in error
+        ? String((error as { code: unknown }).code)
+        : "";
+    if (code === "permission-denied") {
+      throw new Error(
+        "Delete blocked by Firestore rules. Publish firestore.rules (allow delete) in Firebase Console or run: npm run deploy:rules"
+      );
+    }
+    throw error instanceof Error
+      ? error
+      : new Error("Could not delete registration.");
+  }
 }

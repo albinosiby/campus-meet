@@ -18,6 +18,7 @@ import {
   type RegistrationPassData,
 } from "@/landing/components/RegistrationPass";
 import { EVENT_INFO, EVENT_PAYMENT } from "@/landing/data/eventData";
+import { McmWordmark } from "@/shared/components/McmWordmark";
 import {
   clearRegistrationDraft,
   EMPTY_REGISTRATION_DRAFT,
@@ -120,14 +121,7 @@ export default function RegisterPage() {
             Back to Home
           </span>
         </Link>
-        <div className="text-right">
-          <p className="text-sm font-heading font-bold text-cream">
-            JESUS YOUTH
-          </p>
-          <p className="text-[10px] tracking-[0.2em] text-gold uppercase">
-            MCM {EVENT_INFO.shortYear}
-          </p>
-        </div>
+        <McmWordmark size="sm" align="right" />
       </nav>
 
       <div className="relative z-10 max-w-2xl mx-auto section-pad py-12 md:py-20">
