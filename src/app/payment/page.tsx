@@ -16,7 +16,7 @@ import {
   EVENT_PAYMENT,
   formatRegistrationFee,
 } from "@/landing/data/eventData";
-import { McmWordmark } from "@/shared/components/McmWordmark";
+import { EventWordmark } from "@/shared/components/EventWordmark";
 
 const fieldClass =
   "w-full bg-obsidian-card border border-obsidian-border text-cream text-sm px-4 py-3 rounded-sm focus:border-gold/40 focus:outline-none transition-colors placeholder:text-cream-muted/40 font-body";
@@ -125,7 +125,7 @@ export default function PaymentPage() {
             Back to Home
           </span>
         </Link>
-        <McmWordmark size="sm" align="right" />
+        <EventWordmark size="sm" align="right" />
       </nav>
 
       <div className="relative z-10 mx-auto max-w-2xl section-pad py-12 md:py-20">

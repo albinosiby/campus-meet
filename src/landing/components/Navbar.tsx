@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import { EVENT_INFO } from '@/landing/data/eventData';
-import { McmWordmark } from '@/shared/components/McmWordmark';
+import { EventWordmark } from '@/shared/components/EventWordmark';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -62,10 +62,10 @@ export default function Navbar() {
                 />
               </div>
               <div className="hidden md:block">
-                <McmWordmark size="md" />
+                <EventWordmark size="md" />
               </div>
               <div className="md:hidden">
-                <McmWordmark size="sm" />
+                <EventWordmark size="sm" />
               </div>
             </Link>
           </div>

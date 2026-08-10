@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { Instagram, MessageCircle, Youtube } from "lucide-react";
 import { EVENT_INFO } from "@/landing/data/eventData";
-import { McmWordmark } from "@/shared/components/McmWordmark";
+import { EventWordmark } from "@/shared/components/EventWordmark";
 
 export default function Footer() {
   return (
@@ -20,7 +20,7 @@ export default function Footer() {
                 sizes="40px"
               />
             </div>
-            <McmWordmark size="md" showFullName />
+            <EventWordmark size="md" />
           </div>
 
           {/* Tagline */}
@@ -62,8 +62,7 @@ export default function Footer() {
         {/* Bottom */}
         <div className="mt-12 pt-8 border-t border-obsidian-border">
           <p className="text-xs text-cream-muted/50 text-center">
-            &copy; {EVENT_INFO.year} Jesus Youth Malabar · {EVENT_INFO.abbreviation}{" "}
-            {EVENT_INFO.shortYear}
+            &copy; {EVENT_INFO.year} Jesus Youth Malabar · {EVENT_INFO.name}
           </p>
         </div>
       </div>

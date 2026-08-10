@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { ArrowDownUp, Search } from "lucide-react";
+import { useMemo, useState, type ReactNode } from "react";
+import { ArrowDown, ArrowDownUp, ArrowUp, Search } from "lucide-react";
+import { buildDashboardStats, formatCurrency } from "@/admin/analytics";
 import {
   DIETARY_LABELS,
   GENDER_LABELS,
@@ -9,9 +10,14 @@ import {
   YEAR_LABELS,
   ZONE_LABELS,
 } from "@/admin/constants";
-import { formatCurrency } from "@/admin/analytics";
+import {
+  REGISTRATION_SORT_OPTIONS,
+  sortRegistrations,
+  type RegistrationSortKey,
+} from "@/admin/sortRegistrations";
 import type { PaymentStatus, Registration, Zone } from "@/admin/types";
 import { formatPassId } from "@/shared/passId";
+import { ExportMenu } from "./ExportMenu";
 import { RegistrationDetail } from "./RegistrationDetail";
 
 interface RegistrationsTableProps {
@@ -26,14 +32,60 @@ const STATUS_STYLES: Record<PaymentStatus, string> = {
   pending: "border-amber-200 bg-amber-50 text-amber-800",
 };
 
-type SortKey =
-  | "newest"
-  | "oldest"
+type ColumnSortKey = Extract<
+  RegistrationSortKey,
   | "name-asc"
   | "name-desc"
-  | "email-asc"
+  | "pass-asc"
+  | "zone-asc"
   | "amount-desc"
-  | "payment";
+  | "payment"
+  | "newest"
+  | "oldest"
+>;
+
+function SortableTh({
+  label,
+  active,
+  direction,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  direction?: "asc" | "desc";
+  onClick: () => void;
+}) {
+  return (
+    <th className="px-4 py-3 font-medium first:px-5 first:md:px-6 last:px-5 last:md:px-6">
+      <button
+        type="button"
+        onClick={onClick}
+        className={`inline-flex items-center gap-1.5 uppercase tracking-[0.16em] transition-colors hover:text-admin-ink ${
+          active ? "text-admin-ink" : "text-admin-muted"
+        }`}
+      >
+        {label}
+        {active ? (
+          direction === "asc" ? (
+            <ArrowUp className="h-3 w-3 text-gold-dim" />
+          ) : (
+            <ArrowDown className="h-3 w-3 text-gold-dim" />
+          )
+        ) : (
+          <ArrowDownUp className="h-3 w-3 opacity-40" />
+        )}
+      </button>
+    </th>
+  );
+}
+
+function StaticTh({ children }: { children: ReactNode }) {
+  return (
+    <th className="px-4 py-3 font-medium text-admin-muted first:px-5 first:md:px-6 last:px-5 last:md:px-6">
+      {children}
+    </th>
+  );
+}
 
 export function RegistrationsTable({
   registrations,
@@ -45,7 +97,7 @@ export function RegistrationsTable({
   const [paymentFilter, setPaymentFilter] = useState<PaymentStatus | "all">(
     "all"
   );
-  const [sortKey, setSortKey] = useState<SortKey>("newest");
+  const [sortKey, setSortKey] = useState<RegistrationSortKey>("newest");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
@@ -73,65 +125,70 @@ export function RegistrationsTable({
       );
     });
 
-    const sorted = [...rows];
-    sorted.sort((a, b) => {
-      switch (sortKey) {
-        case "oldest":
-          return (
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-          );
-        case "name-asc":
-          return a.fullName.localeCompare(b.fullName, undefined, {
-            sensitivity: "base",
-          });
-        case "name-desc":
-          return b.fullName.localeCompare(a.fullName, undefined, {
-            sensitivity: "base",
-          });
-        case "email-asc":
-          return a.email.localeCompare(b.email, undefined, {
-            sensitivity: "base",
-          });
-        case "amount-desc":
-          return (b.amount ?? 0) - (a.amount ?? 0);
-        case "payment": {
-          const order: Record<PaymentStatus, number> = {
-            pending: 0,
-            unpaid: 1,
-            paid: 2,
-          };
-          return order[a.paymentStatus] - order[b.paymentStatus];
-        }
-        case "newest":
-        default:
-          return (
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          );
-      }
-    });
-
-    return sorted;
+    return sortRegistrations(rows, sortKey);
   }, [registrations, query, zoneFilter, paymentFilter, sortKey]);
+
+  const filteredStats = useMemo(
+    () => buildDashboardStats(filtered),
+    [filtered]
+  );
 
   const selected = useMemo(
     () => registrations.find((r) => r.id === selectedId) ?? null,
     [registrations, selectedId]
   );
 
+  function cycleColumnSort(column: "name" | "pass" | "zone" | "amount" | "payment" | "date") {
+    const next: Record<typeof column, RegistrationSortKey> = {
+      name: sortKey === "name-asc" ? "name-desc" : "name-asc",
+      pass: "pass-asc",
+      zone: "zone-asc",
+      amount: "amount-desc",
+      payment: "payment",
+      date: sortKey === "newest" ? "oldest" : "newest",
+    };
+    setSortKey(next[column]);
+  }
+
+  function columnState(keys: ColumnSortKey[]): {
+    active: boolean;
+    direction?: "asc" | "desc";
+  } {
+    if (!keys.includes(sortKey as ColumnSortKey)) return { active: false };
+    if (sortKey === "name-asc" || sortKey === "oldest" || sortKey === "pass-asc" || sortKey === "zone-asc") {
+      return { active: true, direction: "asc" };
+    }
+    return { active: true, direction: "desc" };
+  }
+
+  const nameSort = columnState(["name-asc", "name-desc"]);
+  const passSort = columnState(["pass-asc"]);
+  const zoneSort = columnState(["zone-asc"]);
+  const amountSort = columnState(["amount-desc"]);
+  const paymentSort = columnState(["payment"]);
+  const dateSort = columnState(["newest", "oldest"]);
+
   return (
     <>
       <div className="rounded-sm border border-admin-border bg-admin-surface shadow-sm">
         <div className="flex flex-col gap-4 border-b border-admin-border px-5 py-5 md:px-6">
-          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
               <h3 className="font-heading text-base font-semibold text-admin-ink">
                 All Registrations
               </h3>
               <p className="mt-1 text-xs text-admin-muted">
                 Showing {filtered.length} of {registrations.length} records ·
-                Click a row for full details
+                Click a row for full details · Downloads use the current sort &
+                filters
               </p>
             </div>
+            <ExportMenu
+              compact
+              registrations={filtered}
+              stats={filteredStats}
+              scopeLabel="Current table view"
+            />
           </div>
 
           <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center">
@@ -149,17 +206,17 @@ export function RegistrationsTable({
               <ArrowDownUp className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-admin-muted/70" />
               <select
                 value={sortKey}
-                onChange={(e) => setSortKey(e.target.value as SortKey)}
+                onChange={(e) =>
+                  setSortKey(e.target.value as RegistrationSortKey)
+                }
                 className="appearance-none rounded-sm border border-admin-border bg-admin-elevated py-2.5 pl-9 pr-8 text-sm text-admin-ink focus:border-gold/50 focus:outline-none"
                 aria-label="Sort registrations"
               >
-                <option value="newest">Newest first</option>
-                <option value="oldest">Oldest first</option>
-                <option value="name-asc">Name A–Z</option>
-                <option value="name-desc">Name Z–A</option>
-                <option value="email-asc">Email A–Z</option>
-                <option value="amount-desc">Amount high–low</option>
-                <option value="payment">Payment status</option>
+                {REGISTRATION_SORT_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
             </div>
             <select
@@ -192,15 +249,45 @@ export function RegistrationsTable({
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-admin-border bg-admin-elevated text-[11px] font-heading uppercase tracking-[0.16em] text-admin-muted">
-                <th className="px-5 py-3 font-medium md:px-6">Name</th>
-                <th className="px-4 py-3 font-medium">Pass ID</th>
-                <th className="px-4 py-3 font-medium">Contact</th>
-                <th className="px-4 py-3 font-medium">College</th>
-                <th className="px-4 py-3 font-medium">Zone</th>
-                <th className="px-4 py-3 font-medium">Amount</th>
-                <th className="px-4 py-3 font-medium">Payment</th>
-                <th className="px-5 py-3 font-medium md:px-6">Registered</th>
+              <tr className="border-b border-admin-border bg-admin-elevated text-[11px] font-heading">
+                <SortableTh
+                  label="Name"
+                  active={nameSort.active}
+                  direction={nameSort.direction}
+                  onClick={() => cycleColumnSort("name")}
+                />
+                <SortableTh
+                  label="Pass ID"
+                  active={passSort.active}
+                  direction={passSort.direction}
+                  onClick={() => cycleColumnSort("pass")}
+                />
+                <StaticTh>Contact</StaticTh>
+                <StaticTh>College</StaticTh>
+                <SortableTh
+                  label="Zone"
+                  active={zoneSort.active}
+                  direction={zoneSort.direction}
+                  onClick={() => cycleColumnSort("zone")}
+                />
+                <SortableTh
+                  label="Amount"
+                  active={amountSort.active}
+                  direction={amountSort.direction}
+                  onClick={() => cycleColumnSort("amount")}
+                />
+                <SortableTh
+                  label="Payment"
+                  active={paymentSort.active}
+                  direction={paymentSort.direction}
+                  onClick={() => cycleColumnSort("payment")}
+                />
+                <SortableTh
+                  label="Registered"
+                  active={dateSort.active}
+                  direction={dateSort.direction}
+                  onClick={() => cycleColumnSort("date")}
+                />
               </tr>
             </thead>
             <tbody>

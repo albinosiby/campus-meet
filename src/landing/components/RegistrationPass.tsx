@@ -58,7 +58,7 @@ export function RegistrationPass({
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-|-$/g, "");
-      link.download = `mcm-2026-pass-${safeName || passCode}.png`;
+      link.download = `malabar-campus-meet-2026-pass-${safeName || passCode}.png`;
       link.href = dataUrl;
       document.body.appendChild(link);
       link.click();
@@ -113,11 +113,11 @@ export function RegistrationPass({
                 </p>
               </div>
               <div className="rounded-sm border border-gold/30 bg-gold/10 px-3 py-2 text-right">
-                <p className="text-[10px] font-heading uppercase tracking-[0.42em] text-gold">
-                  {EVENT_INFO.abbreviation}&nbsp;{EVENT_INFO.shortYear}
-                </p>
-                <p className="mt-1 text-[9px] font-heading uppercase tracking-[0.12em] text-cream-muted">
+                <p className="text-[10px] font-heading uppercase tracking-[0.14em] text-gold">
                   {EVENT_INFO.name}
+                </p>
+                <p className="mt-1 font-heading text-sm font-bold text-cream">
+                  {EVENT_INFO.shortYear}
                 </p>
               </div>
             </div>

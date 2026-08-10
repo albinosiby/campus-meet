@@ -24,7 +24,7 @@ export const EMPTY_REGISTRATION_DRAFT: RegistrationDraft = {
   dietary: "none",
 };
 
-const DRAFT_STORAGE_KEY = "mcm-registration-draft";
+const DRAFT_STORAGE_KEY = "malabar-campus-meet-registration-draft";
 
 export function loadRegistrationDraft(): RegistrationDraft {
   if (typeof window === "undefined") return EMPTY_REGISTRATION_DRAFT;

@@ -64,5 +64,5 @@ export function downloadBlob(blob: Blob, filename: string): void {
 
 export function exportFilename(ext: string): string {
   const stamp = new Date().toISOString().slice(0, 10);
-  return `mcm-2026-registrations-${stamp}.${ext}`;
+  return `malabar-campus-meet-2026-registrations-${stamp}.${ext}`;
 }

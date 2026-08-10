@@ -121,7 +121,11 @@ export function Dashboard() {
                 </span>
               </p>
             </div>
-            <ExportMenu registrations={registrations} stats={stats} />
+            <ExportMenu
+              registrations={registrations}
+              stats={stats}
+              scopeLabel="All registrations"
+            />
           </div>
 
           <StatsCards stats={stats} />

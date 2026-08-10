@@ -28,13 +28,11 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "MCM '26 | Malabar Campus Meet | Jesus Youth",
+  title: "Malabar Campus Meet 2026 | Jesus Youth",
   description:
     "A gathering of campus youth to encounter, connect, grow and live the mission together. September 18–21, 2026 at Don Bosco Arts & Science College, Angadikadavu.",
   keywords: [
     "Jesus Youth",
-    "MCM",
-    "MCM '26",
     "Malabar Campus Meet",
     "2026",
     "Campus Ministry",
@@ -48,7 +46,7 @@ export const metadata: Metadata = {
     apple: [{ url: "/images/jy-logo.png" }],
   },
   openGraph: {
-    title: "MCM '26 | Malabar Campus Meet | Jesus Youth",
+    title: "Malabar Campus Meet 2026 | Jesus Youth",
     description:
       "Gather. Grow. Go. — A gathering of campus youth across Malabar. September 18–21, 2026.",
     type: "website",

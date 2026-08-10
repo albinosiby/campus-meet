@@ -4,5 +4,5 @@ export function formatPassId(registrationId: string): string {
 }
 
 export function passQrPayload(registrationId: string): string {
-  return `MCM26:${registrationId}`;
+  return `MALABAR-CAMPUS-MEET-2026:${registrationId}`;
 }
