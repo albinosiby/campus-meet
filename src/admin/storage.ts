@@ -1,6 +1,7 @@
 import {
   addDoc,
   collection,
+  deleteDoc,
   getDocs,
   limit,
   orderBy,
@@ -144,4 +145,8 @@ export async function submitRegistrationPayment(
     transactionId: txn,
     paymentStatus: "pending" as PaymentStatus,
   });
+}
+
+export async function deleteRegistration(id: string): Promise<void> {
+  await deleteDoc(doc(getFirebaseDb(), REGISTRATIONS_COLLECTION, id));
 }

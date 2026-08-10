@@ -1,7 +1,10 @@
 "use client";
 
+import { useRef, useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { toPng } from "html-to-image";
+import { Download } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { ZONE_LABELS } from "@/admin/constants";
 import type { Zone } from "@/admin/types";
@@ -10,6 +13,7 @@ import {
   EVENT_PAYMENT,
   formatRegistrationFee,
 } from "@/landing/data/eventData";
+import { formatPassId, passQrPayload } from "@/shared/passId";
 
 export interface RegistrationPassData {
   id: string;
@@ -25,18 +29,45 @@ interface RegistrationPassProps {
   onRegisterAnother: () => void;
 }
 
-function shortPassCode(id: string): string {
-  return id.slice(0, 8).toUpperCase();
-}
-
 export function RegistrationPass({
   pass,
   onRegisterAnother,
 }: RegistrationPassProps) {
+  const passRef = useRef<HTMLElement>(null);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState("");
+
   const zoneLabel =
     ZONE_LABELS[pass.zone as Zone] ?? String(pass.zone || "—");
-  const passCode = shortPassCode(pass.id);
-  const qrPayload = `MCM26:${pass.id}`;
+  const passCode = formatPassId(pass.id);
+  const qrPayload = passQrPayload(pass.id);
+
+  async function handleDownload() {
+    if (!passRef.current) return;
+    setDownloadError("");
+    setDownloading(true);
+
+    try {
+      const dataUrl = await toPng(passRef.current, {
+        cacheBust: true,
+        pixelRatio: 2,
+        backgroundColor: "#12141c",
+      });
+      const link = document.createElement("a");
+      const safeName = pass.fullName
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+      link.download = `mcm-2026-pass-${safeName || passCode}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch {
+      setDownloadError("Could not download the pass. Try again.");
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -46,14 +77,15 @@ export function RegistrationPass({
         transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
         className="relative"
       >
-        {/* Soft glow behind pass */}
         <div
           aria-hidden
           className="pointer-events-none absolute -inset-6 rounded-[2rem] bg-gold/[0.07] blur-2xl"
         />
 
-        <article className="relative overflow-hidden rounded-sm border border-gold/25 bg-obsidian-card shadow-[0_24px_80px_-40px_rgba(200,164,78,0.45)]">
-          {/* Top brand strip */}
+        <article
+          ref={passRef}
+          className="relative overflow-hidden rounded-sm border border-gold/25 bg-obsidian-card shadow-[0_24px_80px_-40px_rgba(200,164,78,0.45)]"
+        >
           <div className="relative border-b border-obsidian-border bg-gradient-to-br from-obsidian-light via-obsidian-card to-obsidian-card px-5 pb-5 pt-5 md:px-7">
             <div className="absolute inset-0 opacity-[0.14]">
               <Image
@@ -89,7 +121,6 @@ export function RegistrationPass({
             </div>
           </div>
 
-          {/* Ticket notch + perforation */}
           <div className="relative border-b border-dashed border-obsidian-border">
             <div
               aria-hidden
@@ -121,7 +152,6 @@ export function RegistrationPass({
             </div>
           </div>
 
-          {/* Details + QR stub */}
           <div className="grid gap-6 px-5 py-6 md:grid-cols-[1fr_auto] md:px-7 md:py-7">
             <div className="space-y-5">
               <dl className="grid grid-cols-2 gap-4">
@@ -197,16 +227,31 @@ export function RegistrationPass({
 
       <div className="flex flex-col items-center gap-3 text-center">
         <p className="max-w-sm text-sm leading-relaxed text-cream-muted">
-          You&apos;re registered. Screenshot this pass or save the page — you
-          may need it at the venue.
+          You&apos;re registered. Download your pass and keep it for the venue.
         </p>
-        <button
-          type="button"
-          onClick={onRegisterAnother}
-          className="btn-outline mt-2 inline-flex"
-        >
-          Register another person
-        </button>
+        {downloadError ? (
+          <p className="text-xs text-red-400/90" role="alert">
+            {downloadError}
+          </p>
+        ) : null}
+        <div className="mt-2 flex flex-col items-center gap-3 sm:flex-row">
+          <button
+            type="button"
+            onClick={() => void handleDownload()}
+            disabled={downloading}
+            className="btn-primary inline-flex disabled:opacity-60"
+          >
+            <Download className="h-4 w-4" />
+            {downloading ? "Preparing…" : "Download pass"}
+          </button>
+          <button
+            type="button"
+            onClick={onRegisterAnother}
+            className="btn-outline inline-flex"
+          >
+            Register another person
+          </button>
+        </div>
       </div>
     </div>
   );

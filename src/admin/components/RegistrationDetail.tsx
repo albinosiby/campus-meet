@@ -1,8 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect } from "react";
-import { X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Trash2, X } from "lucide-react";
 import {
   DIETARY_LABELS,
   GENDER_LABELS,
@@ -12,11 +12,13 @@ import {
 } from "@/admin/constants";
 import { formatCurrency } from "@/admin/analytics";
 import type { PaymentStatus, Registration } from "@/admin/types";
+import { formatPassId } from "@/shared/passId";
 
 interface RegistrationDetailProps {
   registration: Registration;
   onClose: () => void;
   onPaymentStatusChange: (id: string, status: PaymentStatus) => void;
+  onDelete: (id: string) => Promise<void> | void;
 }
 
 const STATUS_STYLES: Record<PaymentStatus, string> = {
@@ -46,7 +48,12 @@ export function RegistrationDetail({
   registration: reg,
   onClose,
   onPaymentStatusChange,
+  onDelete,
 }: RegistrationDetailProps) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
@@ -59,6 +66,18 @@ export function RegistrationDetail({
       document.body.style.overflow = prev;
     };
   }, [onClose]);
+
+  async function handleDelete() {
+    setDeleteError("");
+    setDeleting(true);
+    try {
+      await onDelete(reg.id);
+    } catch {
+      setDeleteError("Could not delete this registration. Try again.");
+      setDeleting(false);
+      setConfirmDelete(false);
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-6">
@@ -86,6 +105,9 @@ export function RegistrationDetail({
             >
               {reg.fullName}
             </h2>
+            <p className="mt-1 font-mono text-xs tracking-wider text-gold-dim">
+              Pass ID · {formatPassId(reg.id)}
+            </p>
           </div>
           <button
             type="button"
@@ -99,6 +121,14 @@ export function RegistrationDetail({
 
         <div className="overflow-y-auto px-5 py-2 md:px-6">
           <dl>
+            <DetailRow
+              label="Pass ID"
+              value={
+                <code className="rounded-sm bg-admin-elevated px-2 py-1 font-mono text-[12px] tracking-wider text-gold-dim">
+                  {formatPassId(reg.id)}
+                </code>
+              }
+            />
             <DetailRow label="Email" value={reg.email} />
             <DetailRow label="Phone" value={reg.phone} />
             <DetailRow label="Gender" value={GENDER_LABELS[reg.gender]} />
@@ -166,14 +196,58 @@ export function RegistrationDetail({
           </dl>
         </div>
 
-        <div className="border-t border-admin-border px-5 py-4 md:px-6">
-          <button
-            type="button"
-            onClick={onClose}
-            className="btn-outline w-full justify-center"
-          >
-            Close
-          </button>
+        <div className="space-y-3 border-t border-admin-border px-5 py-4 md:px-6">
+          {deleteError ? (
+            <p className="text-xs text-red-600" role="alert">
+              {deleteError}
+            </p>
+          ) : null}
+
+          {confirmDelete ? (
+            <div className="rounded-sm border border-red-200 bg-red-50 px-3 py-3">
+              <p className="text-sm text-red-800">
+                Delete <span className="font-semibold">{reg.fullName}</span>?
+                This cannot be undone.
+              </p>
+              <div className="mt-3 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => void handleDelete()}
+                  disabled={deleting}
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-sm border border-red-300 bg-red-600 px-3 py-2 text-xs font-heading uppercase tracking-[0.14em] text-white disabled:opacity-60"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  {deleting ? "Deleting…" : "Yes, delete"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(false)}
+                  disabled={deleting}
+                  className="btn-outline flex-1 justify-center"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="btn-outline flex-1 justify-center"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(true)}
+                className="inline-flex items-center justify-center gap-2 rounded-sm border border-red-200 bg-red-50 px-4 py-2 text-xs font-heading uppercase tracking-[0.14em] text-red-700 transition-colors hover:bg-red-100"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Delete
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

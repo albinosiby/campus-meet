@@ -6,8 +6,10 @@ import {
   ZONE_LABELS,
 } from "../constants";
 import type { Registration } from "../types";
+import { formatPassId } from "@/shared/passId";
 
 export const EXPORT_HEADERS = [
+  "Pass ID",
   "ID",
   "Full Name",
   "Email",
@@ -27,6 +29,7 @@ export const EXPORT_HEADERS = [
 
 export function registrationToRow(reg: Registration): string[] {
   return [
+    formatPassId(reg.id),
     reg.id,
     reg.fullName,
     reg.email,

@@ -41,7 +41,8 @@ service cloud.firestore {
       allow create: if isValidRegistrationCreate();
       allow read: if true;
       allow update: if isAdminPaymentStatusUpdate() || isPublicPaymentSubmit();
-      allow delete: if false;
+      // Admin panel (password-gated in the app) can delete registrations
+      allow delete: if true;
     }
   }
 }

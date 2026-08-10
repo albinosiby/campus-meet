@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { buildDashboardStats, formatCurrency } from "@/admin/analytics";
-import { getRegistrations, updatePaymentStatus } from "@/admin/storage";
+import { getRegistrations, updatePaymentStatus, deleteRegistration } from "@/admin/storage";
 import type { PaymentStatus, Registration } from "@/admin/types";
 import { FeeNotice } from "@/landing/components/FeeNotice";
 import { AdminShell } from "./AdminShell";
@@ -65,6 +65,20 @@ export function Dashboard() {
     } catch {
       setRegistrations(previous);
       setLoadError("Could not update payment status. Try again.");
+    }
+  }
+
+  async function handleDelete(id: string) {
+    const previous = registrations;
+    setRegistrations((rows) => rows.filter((row) => row.id !== id));
+
+    try {
+      await deleteRegistration(id);
+      setLoadError("");
+    } catch {
+      setRegistrations(previous);
+      setLoadError("Could not delete registration. Try again.");
+      throw new Error("delete failed");
     }
   }
 
@@ -152,6 +166,7 @@ export function Dashboard() {
             onPaymentStatusChange={(id, status) => {
               void handlePaymentStatusChange(id, status);
             }}
+            onDelete={handleDelete}
           />
         </motion.div>
       )}
