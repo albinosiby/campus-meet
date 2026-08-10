@@ -107,7 +107,6 @@ export default function EventSnapshot() {
               const showDesktopDivider = index < SNAPSHOT_ITEMS.length - 1;
               const showMobileColDivider = index % 2 === 0;
               const showMobileRowDivider = index < 2;
-              const indexLabel = String(index + 1).padStart(2, '0');
               const isVenue = item.label === 'VENUE';
 
               return (
@@ -134,10 +133,6 @@ export default function EventSnapshot() {
                       className="md:hidden absolute left-[18%] right-[18%] bottom-0 h-px bg-gradient-to-r from-transparent via-gold/25 to-transparent"
                     />
                   )}
-
-                  <span className="font-heading text-[10px] tracking-[0.35em] text-gold-dim/70 font-medium mb-5 group-hover:text-gold-dim transition-colors duration-500">
-                    {indexLabel}
-                  </span>
 
                   <p className="text-[10px] tracking-[0.38em] uppercase text-gold-dim font-heading font-semibold mb-4">
                     {item.label}

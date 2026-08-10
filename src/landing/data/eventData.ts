@@ -16,6 +16,9 @@ export const EVENT_INFO = {
   venue: "Don Bosco Arts & Science College",
   venueLocation: "Angadikadavu",
   venueMapsUrl: "https://maps.app.goo.gl/p9pcmKgKoyFak8GVA",
+  /** Embeddable map view for the venue (same place as venueMapsUrl). */
+  venueMapsEmbedUrl:
+    "https://maps.google.com/maps?q=Don+Bosco+Arts+and+Science+College,+Angadikadavu,+Kerala&z=16&output=embed",
   target: "Campus Students",
   description:
     "A gathering of campus youth to encounter, connect, grow and live the mission together.",

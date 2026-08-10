@@ -9,6 +9,7 @@ import GallerySection from "@/landing/components/GallerySection";
 import RegistrationCTA from "@/landing/components/RegistrationCTA";
 import FAQSection from "@/landing/components/FAQSection";
 import FinalCTA from "@/landing/components/FinalCTA";
+import LocationSection from "@/landing/components/LocationSection";
 import Footer from "@/landing/components/Footer";
 import MobileStickyCTA from "@/landing/components/MobileStickyCTA";
 
@@ -27,6 +28,7 @@ export default function Home() {
         <RegistrationCTA />
         <FAQSection />
         <FinalCTA />
+        <LocationSection />
       </main>
       <Footer />
       <MobileStickyCTA />

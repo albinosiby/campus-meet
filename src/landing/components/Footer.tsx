@@ -47,7 +47,6 @@ export default function Footer() {
           GATHER &bull; GROW &bull; GO
         </p>
 
-        {/* Bottom */}
         <div className="mt-12 pt-8 border-t border-obsidian-border">
           <p className="text-xs text-cream-muted/50 text-center">
             &copy; {EVENT_INFO.year} Jesus Youth Malabar · {EVENT_INFO.name}

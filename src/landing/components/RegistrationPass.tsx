@@ -3,15 +3,11 @@
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { toPng } from "html-to-image";
-import { Download } from "lucide-react";
+import { Download, MapPin } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { ZONE_LABELS } from "@/admin/constants";
 import type { Zone } from "@/admin/types";
-import {
-  EVENT_INFO,
-  EVENT_PAYMENT,
-  formatRegistrationFee,
-} from "@/landing/data/eventData";
+import { EVENT_INFO } from "@/landing/data/eventData";
 import { formatPassId, passQrPayload } from "@/shared/passId";
 
 export interface RegistrationPassData {
@@ -50,7 +46,7 @@ export function RegistrationPass({
       const dataUrl = await toPng(passRef.current, {
         cacheBust: true,
         pixelRatio: 2,
-        backgroundColor: "#12141c",
+        backgroundColor: "#090a0f",
       });
       const link = document.createElement("a");
       const safeName = pass.fullName
@@ -85,22 +81,23 @@ export function RegistrationPass({
 
         <article
           ref={passRef}
-          className="relative overflow-hidden rounded-sm border border-gold/25 bg-obsidian-card shadow-[0_24px_80px_-40px_rgba(200,164,78,0.45)]"
+          className="relative overflow-hidden rounded-sm border border-gold/25 bg-obsidian shadow-[0_24px_80px_-40px_rgba(200,164,78,0.45)]"
         >
-          <div className="relative border-b border-obsidian-border bg-gradient-to-br from-obsidian-light via-obsidian-card to-obsidian-card px-5 pb-5 pt-5 md:px-7">
-            <div className="absolute inset-0 opacity-[0.14]">
-              {/* Use plain img so pass PNG download captures reliably */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/images/hero-bg.jpg"
-                alt=""
-                className="h-full w-full object-cover"
-                crossOrigin="anonymous"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-obsidian-card via-obsidian/80 to-obsidian/40" />
-            </div>
+          {/* Hero background across the full pass */}
+          <div className="absolute inset-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/hero-bg.jpg"
+              alt=""
+              className="h-full w-full object-cover object-center"
+              crossOrigin="anonymous"
+            />
+            <div className="absolute inset-0 bg-obsidian/78" />
+            <div className="absolute inset-0 bg-gradient-to-b from-obsidian/40 via-obsidian/55 to-obsidian/88" />
+          </div>
 
-            <div className="relative flex items-start justify-between gap-4">
+          <div className="relative border-b border-gold/15 px-5 pb-5 pt-5 md:px-7">
+            <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-[10px] font-heading uppercase tracking-[0.32em] text-gold">
                   Event Pass
@@ -112,7 +109,7 @@ export function RegistrationPass({
                   {EVENT_INFO.organizer} · {EVENT_INFO.year}
                 </p>
               </div>
-              <div className="rounded-sm border border-gold/30 bg-gold/10 px-3 py-2 text-right">
+              <div className="rounded-sm border border-gold/30 bg-obsidian/50 px-3 py-2 text-right backdrop-blur-sm">
                 <p className="text-[10px] font-heading uppercase tracking-[0.14em] text-gold">
                   {EVENT_INFO.name}
                 </p>
@@ -123,7 +120,7 @@ export function RegistrationPass({
             </div>
           </div>
 
-          <div className="relative border-b border-dashed border-obsidian-border">
+          <div className="relative border-b border-dashed border-gold/20">
             <div
               aria-hidden
               className="absolute -left-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-obsidian"
@@ -133,29 +130,17 @@ export function RegistrationPass({
               className="absolute -right-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-obsidian"
             />
             <div className="px-5 py-4 md:px-7">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="text-[10px] font-heading uppercase tracking-[0.2em] text-cream-muted">
-                    Participant
-                  </p>
-                  <p className="mt-1 font-heading text-xl font-bold text-cream md:text-2xl">
-                    {pass.fullName}
-                  </p>
-                </div>
-                <div className="rounded-sm border border-gold/35 bg-gold/[0.08] px-3 py-2">
-                  <p className="text-[9px] font-heading uppercase tracking-[0.18em] text-gold">
-                    Fee due later
-                  </p>
-                  <p className="mt-0.5 font-heading text-sm font-semibold text-cream">
-                    {formatRegistrationFee()}
-                  </p>
-                </div>
-              </div>
+              <p className="text-[10px] font-heading uppercase tracking-[0.2em] text-cream-muted">
+                Participant
+              </p>
+              <p className="mt-1 font-heading text-xl font-bold text-cream md:text-2xl">
+                {pass.fullName}
+              </p>
             </div>
           </div>
 
-          <div className="grid gap-6 px-5 py-6 md:grid-cols-[1fr_auto] md:px-7 md:py-7">
-            <div className="space-y-5">
+          <div className="relative grid gap-6 px-5 py-6 md:grid-cols-[1fr_auto] md:px-7 md:py-7">
+            <div>
               <dl className="grid grid-cols-2 gap-4">
                 <div>
                   <dt className="text-[10px] font-heading uppercase tracking-[0.18em] text-cream-muted">
@@ -180,6 +165,15 @@ export function RegistrationPass({
                       {EVENT_INFO.venueLocation}
                     </span>
                   </dd>
+                  <a
+                    href={EVENT_INFO.venueMapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-heading uppercase tracking-[0.18em] text-gold transition-colors hover:text-gold-bright"
+                  >
+                    <MapPin className="h-3 w-3" />
+                    Open in Maps
+                  </a>
                 </div>
                 <div className="col-span-2">
                   <dt className="text-[10px] font-heading uppercase tracking-[0.18em] text-cream-muted">
@@ -188,16 +182,9 @@ export function RegistrationPass({
                   <dd className="mt-1 text-sm text-cream">{pass.college}</dd>
                 </div>
               </dl>
-
-              <p className="text-[11px] leading-relaxed text-cream-muted/70">
-                No payment needed now. When ready, open the payment page, enter
-                this email ({pass.email}), pay{" "}
-                {EVENT_PAYMENT.currencySymbol}
-                {EVENT_PAYMENT.amount}, and submit your transaction ID.
-              </p>
             </div>
 
-            <div className="flex flex-col items-center justify-center gap-3 border-t border-obsidian-border pt-5 md:border-l md:border-t-0 md:pl-6 md:pt-0">
+            <div className="flex flex-col items-center justify-center gap-3 border-t border-gold/15 pt-5 md:border-l md:border-t-0 md:pl-6 md:pt-0">
               <div className="rounded-sm border border-obsidian-border bg-cream p-2.5">
                 <QRCodeSVG
                   value={qrPayload}
@@ -219,7 +206,7 @@ export function RegistrationPass({
             </div>
           </div>
 
-          <div className="border-t border-obsidian-border bg-obsidian-light/60 px-5 py-3 md:px-7">
+          <div className="relative border-t border-gold/15 bg-obsidian/50 px-5 py-3 backdrop-blur-sm md:px-7">
             <p className="text-center text-[10px] font-heading uppercase tracking-[0.24em] text-cream-muted">
               {EVENT_INFO.tagline} · Keep this pass for check-in
             </p>
