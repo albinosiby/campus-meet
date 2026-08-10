@@ -32,14 +32,13 @@ export default function EventSnapshot() {
   };
 
   return (
-    <section id="snapshot" className="relative py-28 md:py-40 overflow-hidden">
-      {/* Layered atmosphere */}
-      <div className="absolute inset-0 bg-[#0b0d14]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(200,164,78,0.09)_0%,transparent_55%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,rgba(9,10,15,0.9)_0%,transparent_55%)]" />
+    <section
+      id="snapshot"
+      className="section-bright relative py-28 md:py-40 overflow-hidden"
+    >
       <div
         aria-hidden
-        className="absolute inset-0 opacity-[0.035] mix-blend-overlay pointer-events-none"
+        className="absolute inset-0 opacity-[0.04] mix-blend-multiply pointer-events-none"
         style={{
           backgroundImage:
             "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
@@ -47,14 +46,13 @@ export default function EventSnapshot() {
       />
 
       <div ref={sectionRef} className="relative max-w-6xl mx-auto section-pad">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           className="flex flex-col items-center text-center mb-16 md:mb-24"
         >
-          <span className="text-[10px] tracking-[0.45em] uppercase text-gold/60 font-heading font-medium">
+          <span className="text-[10px] tracking-[0.45em] uppercase text-gold-dim font-heading font-medium">
             Event details
           </span>
 
@@ -64,42 +62,39 @@ export default function EventSnapshot() {
             transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="mt-6 mb-6 flex items-center gap-3 origin-center"
           >
-            <span className="block w-8 h-px bg-gold/40" />
-            <span className="block w-1 h-1 rotate-45 bg-gold/70" />
-            <span className="block w-8 h-px bg-gold/40" />
+            <span className="block w-8 h-px bg-gold/50" />
+            <span className="block w-1 h-1 rotate-45 bg-gold" />
+            <span className="block w-8 h-px bg-gold/50" />
           </motion.div>
 
-          <h2 className="text-2xl md:text-4xl lg:text-[2.75rem] font-heading font-extrabold text-cream tracking-[0.08em] uppercase leading-tight">
+          <h2 className="text-2xl md:text-4xl lg:text-[2.75rem] font-heading font-extrabold text-ink tracking-[0.08em] uppercase leading-tight">
             The moment is coming
           </h2>
 
-          <p className="mt-5 text-sm md:text-[15px] text-cream-muted/75 font-body max-w-md leading-relaxed">
+          <p className="mt-5 text-sm md:text-[15px] text-ink-muted font-body max-w-md leading-relaxed">
             Four days. One campus. A gathering that shapes the year ahead.
           </p>
         </motion.div>
 
-        {/* Premium facts band */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
           transition={{ duration: 0.8, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-          className="relative"
+          className="relative bg-white/55 backdrop-blur-sm"
         >
-          {/* Thin gold frame */}
           <div
             aria-hidden
-            className="absolute inset-0 border border-gold/15 pointer-events-none"
+            className="absolute inset-0 border border-gold/25 pointer-events-none"
           />
           <div
             aria-hidden
-            className="absolute inset-[5px] border border-gold/[0.06] pointer-events-none"
+            className="absolute inset-[5px] border border-gold/10 pointer-events-none"
           />
 
-          {/* Corner accents */}
-          <span aria-hidden className="absolute top-0 left-0 w-6 h-6 border-t border-l border-gold/45" />
-          <span aria-hidden className="absolute top-0 right-0 w-6 h-6 border-t border-r border-gold/45" />
-          <span aria-hidden className="absolute bottom-0 left-0 w-6 h-6 border-b border-l border-gold/45" />
-          <span aria-hidden className="absolute bottom-0 right-0 w-6 h-6 border-b border-r border-gold/45" />
+          <span aria-hidden className="absolute top-0 left-0 w-6 h-6 border-t border-l border-gold/55" />
+          <span aria-hidden className="absolute top-0 right-0 w-6 h-6 border-t border-r border-gold/55" />
+          <span aria-hidden className="absolute bottom-0 left-0 w-6 h-6 border-b border-l border-gold/55" />
+          <span aria-hidden className="absolute bottom-0 right-0 w-6 h-6 border-b border-r border-gold/55" />
 
           <motion.div
             variants={containerVariants}
@@ -122,41 +117,41 @@ export default function EventSnapshot() {
                   {showDesktopDivider && (
                     <div
                       aria-hidden
-                      className="hidden md:block absolute right-0 top-[18%] bottom-[18%] w-px bg-gradient-to-b from-transparent via-gold/20 to-transparent"
+                      className="hidden md:block absolute right-0 top-[18%] bottom-[18%] w-px bg-gradient-to-b from-transparent via-gold/30 to-transparent"
                     />
                   )}
                   {showMobileColDivider && (
                     <div
                       aria-hidden
-                      className="md:hidden absolute right-0 top-[15%] bottom-[15%] w-px bg-gradient-to-b from-transparent via-gold/15 to-transparent"
+                      className="md:hidden absolute right-0 top-[15%] bottom-[15%] w-px bg-gradient-to-b from-transparent via-gold/25 to-transparent"
                     />
                   )}
                   {showMobileRowDivider && (
                     <div
                       aria-hidden
-                      className="md:hidden absolute left-[18%] right-[18%] bottom-0 h-px bg-gradient-to-r from-transparent via-gold/15 to-transparent"
+                      className="md:hidden absolute left-[18%] right-[18%] bottom-0 h-px bg-gradient-to-r from-transparent via-gold/25 to-transparent"
                     />
                   )}
 
-                  <span className="font-heading text-[10px] tracking-[0.35em] text-gold/35 font-medium mb-5 group-hover:text-gold/70 transition-colors duration-500">
+                  <span className="font-heading text-[10px] tracking-[0.35em] text-gold-dim/70 font-medium mb-5 group-hover:text-gold-dim transition-colors duration-500">
                     {indexLabel}
                   </span>
 
-                  <p className="text-[10px] tracking-[0.38em] uppercase text-gold font-heading font-semibold mb-4">
+                  <p className="text-[10px] tracking-[0.38em] uppercase text-gold-dim font-heading font-semibold mb-4">
                     {item.label}
                   </p>
 
-                  <p className="text-lg md:text-xl lg:text-[1.35rem] text-cream font-heading font-bold tracking-tight leading-snug">
+                  <p className="text-lg md:text-xl lg:text-[1.35rem] text-ink font-heading font-bold tracking-tight leading-snug">
                     {item.value}
                   </p>
 
                   {item.detail && (
-                    <p className="mt-2.5 text-[11px] md:text-xs tracking-[0.18em] uppercase text-cream-muted/55 font-heading font-medium">
+                    <p className="mt-2.5 text-[11px] md:text-xs tracking-[0.18em] uppercase text-ink-muted font-heading font-medium">
                       {item.detail}
                     </p>
                   )}
 
-                  <div className="mt-6 h-px w-0 group-hover:w-10 bg-gradient-to-r from-transparent via-gold/50 to-transparent transition-all duration-500 ease-out" />
+                  <div className="mt-6 h-px w-0 group-hover:w-10 bg-gradient-to-r from-transparent via-gold/60 to-transparent transition-all duration-500 ease-out" />
                 </motion.div>
               );
             })}

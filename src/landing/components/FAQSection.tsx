@@ -15,9 +15,8 @@ export default function FAQSection() {
   };
 
   return (
-    <section id="faq" className="py-24 md:py-36 bg-obsidian">
+    <section id="faq" className="section-bright py-24 md:py-36">
       <div className="max-w-3xl mx-auto section-pad">
-        {/* Header */}
         <motion.div
           ref={ref}
           className="text-center mb-16"
@@ -25,16 +24,15 @@ export default function FAQSection() {
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
         >
-          <p className="text-xs tracking-[0.3em] uppercase text-gold font-heading mb-4">
+          <p className="text-xs tracking-[0.3em] uppercase text-gold-dim font-heading mb-4">
             FAQ
           </p>
-          <h2 className="text-3xl md:text-4xl font-heading font-extrabold text-cream tracking-tight">
+          <h2 className="text-3xl md:text-4xl font-heading font-extrabold text-ink tracking-tight">
             QUICK QUESTIONS
           </h2>
-          <div className="w-16 h-px bg-gold/40 mx-auto mt-6" />
+          <div className="w-16 h-px bg-gold/50 mx-auto mt-6" />
         </motion.div>
 
-        {/* Accordion */}
         <div>
           {FAQ_ITEMS.map((item, index) => (
             <motion.div
@@ -50,10 +48,10 @@ export default function FAQSection() {
                 aria-expanded={activeIndex === index}
                 aria-controls={`faq-answer-${index}`}
               >
-                <span className="text-sm md:text-base font-heading font-semibold text-cream pr-4">
+                <span className="text-sm md:text-base font-heading font-semibold text-ink pr-4">
                   {item.question}
                 </span>
-                <span className="text-gold/60 flex-shrink-0">
+                <span className="text-gold-dim flex-shrink-0">
                   {activeIndex === index ? (
                     <Minus className="w-4 h-4" />
                   ) : (
@@ -73,7 +71,7 @@ export default function FAQSection() {
                     transition={{ duration: 0.3, ease: "easeInOut" }}
                     className="overflow-hidden"
                   >
-                    <p className="text-sm text-cream-muted leading-relaxed pb-6">
+                    <p className="text-sm text-ink-muted leading-relaxed pb-6">
                       {item.answer}
                     </p>
                   </motion.div>

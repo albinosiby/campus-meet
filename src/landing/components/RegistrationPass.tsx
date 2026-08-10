@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { toPng } from "html-to-image";
 import { Download } from "lucide-react";
@@ -61,9 +60,11 @@ export function RegistrationPass({
         .replace(/^-|-$/g, "");
       link.download = `mcm-2026-pass-${safeName || passCode}.png`;
       link.href = dataUrl;
+      document.body.appendChild(link);
       link.click();
+      link.remove();
     } catch {
-      setDownloadError("Could not download the pass. Try again.");
+      setDownloadError("Could not download the pass image. Try again.");
     } finally {
       setDownloading(false);
     }
@@ -88,12 +89,13 @@ export function RegistrationPass({
         >
           <div className="relative border-b border-obsidian-border bg-gradient-to-br from-obsidian-light via-obsidian-card to-obsidian-card px-5 pb-5 pt-5 md:px-7">
             <div className="absolute inset-0 opacity-[0.14]">
-              <Image
+              {/* Use plain img so pass PNG download captures reliably */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
                 src="/images/hero-bg.jpg"
                 alt=""
-                fill
-                className="object-cover"
-                sizes="640px"
+                className="h-full w-full object-cover"
+                crossOrigin="anonymous"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-obsidian-card via-obsidian/80 to-obsidian/40" />
             </div>
@@ -227,7 +229,8 @@ export function RegistrationPass({
 
       <div className="flex flex-col items-center gap-3 text-center">
         <p className="max-w-sm text-sm leading-relaxed text-cream-muted">
-          You&apos;re registered. Download your pass and keep it for the venue.
+          You&apos;re registered. Download your pass as an image and keep it for
+          check-in.
         </p>
         {downloadError ? (
           <p className="text-xs text-red-400/90" role="alert">
@@ -242,7 +245,7 @@ export function RegistrationPass({
             className="btn-primary inline-flex disabled:opacity-60"
           >
             <Download className="h-4 w-4" />
-            {downloading ? "Preparing…" : "Download pass"}
+            {downloading ? "Saving image…" : "Download pass image"}
           </button>
           <button
             type="button"

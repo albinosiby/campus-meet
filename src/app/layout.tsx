@@ -18,7 +18,11 @@ const inter = Inter({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#090a0f",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#090a0f" },
+    { media: "(prefers-color-scheme: dark)", color: "#090a0f" },
+  ],
+  colorScheme: "dark",
   width: "device-width",
   initialScale: 1,
 };
@@ -56,7 +60,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${manrope.variable} ${inter.variable}`}>
+    <html
+      lang="en"
+      className={`dark ${manrope.variable} ${inter.variable}`}
+      style={{ colorScheme: "dark" }}
+    >
       <body className="antialiased">
         <DevErrorFilter />
         {children}

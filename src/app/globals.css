@@ -12,6 +12,13 @@
   --color-gold-dim: #9a7b3a;
   --color-accent-blue: #3b82c4;
 
+  /* Bright section surfaces (cool light — contrast to dark bands) */
+  --color-dawn: #eef1f6;
+  --color-dawn-deep: #e4e9f1;
+  --color-ink: #12141c;
+  --color-ink-muted: #5a6170;
+  --color-ink-border: #cfd5e0;
+
   /* Admin light theme */
   --color-admin-bg: #f3f4f7;
   --color-admin-surface: #ffffff;
@@ -33,6 +40,8 @@ html {
   scroll-padding-top: 5.5rem;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color-scheme: dark;
+  background-color: var(--color-obsidian);
 }
 
 body {
@@ -40,6 +49,24 @@ body {
   background-color: var(--color-obsidian);
   color: var(--color-cream);
   overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* Keep native controls (inputs, selects, autofill) on-theme */
+input,
+textarea,
+select {
+  color-scheme: dark;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: var(--color-cream);
+  -webkit-box-shadow: 0 0 0px 1000px var(--color-obsidian-card) inset;
+  transition: background-color 9999s ease-in-out 0s;
 }
 
 ::selection {
@@ -169,6 +196,22 @@ body {
 .section-pad {
   padding-left: max(1.25rem, env(safe-area-inset-left));
   padding-right: max(1.25rem, env(safe-area-inset-right));
+}
+
+/* Bright alternating bands */
+.section-bright {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(200, 164, 78, 0.12) 0%, transparent 55%),
+    linear-gradient(180deg, var(--color-dawn) 0%, var(--color-dawn-deep) 100%);
+  color: var(--color-ink);
+}
+
+.section-bright .faq-item {
+  border-bottom-color: var(--color-ink-border);
+}
+
+.section-bright .faq-item:hover {
+  border-color: rgba(154, 123, 58, 0.45);
 }
 
 /* ============================================

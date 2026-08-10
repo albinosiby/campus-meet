@@ -66,8 +66,8 @@ export default function Navbar() {
                 <span className="font-heading font-bold text-cream text-xl leading-tight tracking-tight">
                   JESUS YOUTH
                 </span>
-                <span className="font-heading text-[10px] tracking-[0.22em] text-gold uppercase leading-tight mt-0.5 font-semibold">
-                  MALABAR CAMPUS MEET '26
+                <span className="font-heading text-[10px] tracking-[0.12em] text-gold leading-tight mt-0.5 font-semibold">
+                  Malabar Campus Meets 2026
                 </span>
               </div>
               {/* Mobile Logo Text */}
@@ -75,8 +75,8 @@ export default function Navbar() {
                 <span className="font-heading font-bold text-cream text-sm leading-tight">
                   JESUS YOUTH
                 </span>
-                <span className="font-heading text-[9px] tracking-[0.18em] text-gold uppercase font-semibold">
-                  MALABAR '26
+                <span className="font-heading text-[8px] tracking-[0.08em] text-gold font-semibold">
+                  Malabar Campus Meets 2026
                 </span>
               </div>
             </Link>
