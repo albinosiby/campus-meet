@@ -3,7 +3,6 @@ import Hero from "@/landing/components/Hero";
 import EventSnapshot from "@/landing/components/EventSnapshot";
 import AboutSection from "@/landing/components/AboutSection";
 import ScriptureSection from "@/landing/components/ScriptureSection";
-import ExperienceSection from "@/landing/components/ExperienceSection";
 import ThemeSection from "@/landing/components/ThemeSection";
 import GallerySection from "@/landing/components/GallerySection";
 import RegistrationCTA from "@/landing/components/RegistrationCTA";
@@ -22,7 +21,6 @@ export default function Home() {
         <EventSnapshot />
         <AboutSection />
         <ScriptureSection />
-        <ExperienceSection />
         <ThemeSection />
         <GallerySection />
         <RegistrationCTA />

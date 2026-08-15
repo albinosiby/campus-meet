@@ -90,39 +90,6 @@ export const SNAPSHOT_ITEMS = [
   },
 ] as const;
 
-export const EXPERIENCES = [
-  {
-    number: "01",
-    title: "WORSHIP",
-    description: "Moments to pause, pray and encounter God.",
-    image: "/images/worship.jpg",
-    size: "large" as const,
-  },
-  {
-    number: "02",
-    title: "COMMUNITY",
-    description:
-      "Meet and connect with students from campuses across Malabar.",
-    image: "/images/community.jpg",
-    size: "small" as const,
-  },
-  {
-    number: "03",
-    title: "FORMATION",
-    description: "Grow deeper in faith, understanding and purpose.",
-    image: "/images/formation.jpg",
-    size: "small" as const,
-  },
-  {
-    number: "04",
-    title: "MISSION",
-    description:
-      "Be inspired to carry the Gospel into everyday campus life.",
-    image: "/images/mission.jpg",
-    size: "large" as const,
-  },
-] as const;
-
 export const GALLERY_IMAGES = [
   {
     src: "/images/gallery-clapping.jpg",
