@@ -58,7 +58,7 @@ function countByKey<T extends string>(
     .filter((slice) => slice.value > 0);
 }
 
-function topColleges(items: Registration[], limit = 6): ChartSlice[] {
+function topColleges(items: Registration[]): ChartSlice[] {
   const counts = new Map<string, number>();
   for (const item of items) {
     const name = item.college.trim() || "Unknown";
@@ -66,10 +66,9 @@ function topColleges(items: Registration[], limit = 6): ChartSlice[] {
   }
 
   return [...counts.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, limit)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .map(([label, value], index) => ({
-      key: label.toLowerCase().replace(/\s+/g, "-"),
+      key: `${label.toLowerCase().replace(/\s+/g, "-")}-${index}`,
       label,
       value,
       color: COLLEGE_COLORS[index % COLLEGE_COLORS.length],

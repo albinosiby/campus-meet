@@ -82,7 +82,7 @@ export function PieChartCard({ title, description, data }: PieChartCardProps) {
             </ResponsiveContainer>
           </div>
 
-          <ul className="min-w-[140px] space-y-2.5">
+          <ul className="max-h-[280px] min-w-[160px] space-y-2.5 overflow-y-auto pr-1">
             {chartData.map((item) => (
               <li
                 key={item.key}
@@ -93,7 +93,7 @@ export function PieChartCard({ title, description, data }: PieChartCardProps) {
                     className="h-2.5 w-2.5 shrink-0 rounded-full"
                     style={{ backgroundColor: item.color }}
                   />
-                  <span className="truncate text-xs text-admin-muted">
+                  <span className="truncate text-xs text-admin-muted" title={item.label}>
                     {item.label}
                   </span>
                 </div>

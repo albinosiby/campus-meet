@@ -160,8 +160,8 @@ export function Dashboard() {
               data={stats.dietary}
             />
             <PieChartCard
-              title="Top Colleges"
-              description="Colleges with the highest number of registrations."
+              title="Colleges"
+              description="All colleges by registration count."
               data={stats.topColleges}
             />
           </div>
