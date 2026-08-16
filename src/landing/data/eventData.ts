@@ -24,6 +24,16 @@ export const EVENT_INFO = {
     "A gathering of campus youth to encounter, connect, grow and live the mission together.",
   registerUrl: "/register",
   paymentUrl: "/payment",
+  contacts: [
+    {
+      label: "+91 92072 00525",
+      tel: "+919207200525",
+    },
+    {
+      label: "+91 90619 15105",
+      tel: "+919061915105",
+    },
+  ],
 };
 
 /** Payment config. UPI details come from env so you can change them without code edits. */

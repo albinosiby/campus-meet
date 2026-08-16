@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Instagram } from "lucide-react";
+import { Instagram, Phone } from "lucide-react";
 import { EVENT_INFO, SOCIAL_LINKS } from "@/landing/data/eventData";
 import { EventWordmark } from "@/shared/components/EventWordmark";
 
@@ -40,6 +40,25 @@ export default function Footer() {
           >
             <Instagram className="w-5 h-5" />
           </a>
+        </div>
+
+        {/* Contact */}
+        <div className="mt-10 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-[10px] font-heading uppercase tracking-[0.3em] text-gold">
+            Contact
+          </p>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-6">
+            {EVENT_INFO.contacts.map((contact) => (
+              <a
+                key={contact.tel}
+                href={`tel:${contact.tel}`}
+                className="inline-flex items-center gap-2 text-sm text-cream-muted no-underline transition-colors hover:text-gold"
+              >
+                <Phone className="h-3.5 w-3.5 text-gold" />
+                <span className="font-heading tracking-wide">{contact.label}</span>
+              </a>
+            ))}
+          </div>
         </div>
 
         {/* Mobile Tagline */}
