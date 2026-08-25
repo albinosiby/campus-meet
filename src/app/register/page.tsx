@@ -86,6 +86,7 @@ export default function RegisterPage() {
         throw new Error("Transaction ID must be at least 8 characters.");
       }
 
+      const paidAt = new Date().toISOString();
       const registration = await addRegistration({
         fullName: draft.fullName.trim(),
         email: draft.email.trim(),
@@ -100,6 +101,14 @@ export default function RegisterPage() {
         amount: amountPaid,
         transactionId,
         paymentStatus: "pending",
+        payments: [
+          {
+            amount: amountPaid,
+            transactionId,
+            paidAt,
+            source: "register",
+          },
+        ],
       });
       clearRegistrationDraft();
       setDraft(EMPTY_REGISTRATION_DRAFT);

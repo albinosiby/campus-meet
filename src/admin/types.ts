@@ -9,6 +9,14 @@ export type YearOfStudy = "1" | "2" | "3" | "4" | "5" | "pg";
 export type Dietary = "none" | "veg" | "nonveg";
 export type PaymentStatus = "paid" | "unpaid" | "pending";
 
+export interface PaymentRecord {
+  amount: number;
+  transactionId: string;
+  /** ISO timestamp when this installment was recorded. */
+  paidAt: string;
+  source?: "register" | "payment" | "admin";
+}
+
 export interface Registration {
   id: string;
   fullName: string;
@@ -21,9 +29,13 @@ export interface Registration {
   zone: Zone;
   diocese: string;
   dietary: Dietary;
+  /** Total amount paid so far (sum of payments). */
   amount: number;
+  /** Latest transaction ID (convenience / legacy). */
   transactionId: string;
   paymentStatus: PaymentStatus;
+  /** Chronological payment installments. */
+  payments: PaymentRecord[];
   createdAt: string;
 }
 

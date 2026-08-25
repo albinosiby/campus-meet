@@ -2,14 +2,15 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import { ArrowDown, ArrowDownUp, ArrowUp, Search } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { buildDashboardStats, formatCurrency } from "@/admin/analytics";
 import {
   DIETARY_LABELS,
   GENDER_LABELS,
-  PAYMENT_STATUS_LABELS,
   YEAR_LABELS,
   ZONE_LABELS,
 } from "@/admin/constants";
+import { amountRemaining, paymentProgressLabel } from "@/admin/payment";
 import {
   REGISTRATION_SORT_OPTIONS,
   sortRegistrations,
@@ -18,16 +19,10 @@ import {
 import type { PaymentStatus, Registration, Zone } from "@/admin/types";
 import { formatPassId } from "@/shared/passId";
 import { ExportMenu } from "./ExportMenu";
-import {
-  RegistrationDetail,
-  type ManualPaymentPayload,
-} from "./RegistrationDetail";
 
 interface RegistrationsTableProps {
   registrations: Registration[];
   onPaymentStatusChange: (id: string, status: PaymentStatus) => void;
-  onMarkPaid: (id: string, payload: ManualPaymentPayload) => Promise<void> | void;
-  onDelete: (id: string) => Promise<void> | void;
 }
 
 const STATUS_STYLES: Record<PaymentStatus, string> = {
@@ -94,16 +89,14 @@ function StaticTh({ children }: { children: ReactNode }) {
 export function RegistrationsTable({
   registrations,
   onPaymentStatusChange,
-  onMarkPaid,
-  onDelete,
 }: RegistrationsTableProps) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [zoneFilter, setZoneFilter] = useState<Zone | "all">("all");
   const [paymentFilter, setPaymentFilter] = useState<PaymentStatus | "all">(
     "all"
   );
   const [sortKey, setSortKey] = useState<RegistrationSortKey>("newest");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -136,11 +129,6 @@ export function RegistrationsTable({
   const filteredStats = useMemo(
     () => buildDashboardStats(filtered),
     [filtered]
-  );
-
-  const selected = useMemo(
-    () => registrations.find((r) => r.id === selectedId) ?? null,
-    [registrations, selectedId]
   );
 
   function cycleColumnSort(column: "name" | "pass" | "zone" | "amount" | "payment" | "date") {
@@ -184,7 +172,7 @@ export function RegistrationsTable({
               </h3>
               <p className="mt-1 text-xs text-admin-muted">
                 Showing {filtered.length} of {registrations.length} records ·
-                Click a row for full details · Downloads use the current sort &
+                Tap a student for their full payment page · Downloads use the current sort &
                 filters
               </p>
             </div>
@@ -311,11 +299,17 @@ export function RegistrationsTable({
                     key={reg.id}
                     role="button"
                     tabIndex={0}
-                    onClick={() => setSelectedId(reg.id)}
+                    onClick={() =>
+                      router.push(
+                        `/dashboard/registration?id=${encodeURIComponent(reg.id)}`
+                      )
+                    }
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
-                        setSelectedId(reg.id);
+                        router.push(
+                          `/dashboard/registration?id=${encodeURIComponent(reg.id)}`
+                        );
                       }
                     }}
                     className="cursor-pointer border-b border-admin-border/80 transition-colors hover:bg-admin-elevated/80"
@@ -356,6 +350,11 @@ export function RegistrationsTable({
                     </td>
                     <td className="px-4 py-4 font-heading font-semibold tabular-nums text-admin-ink">
                       {formatCurrency(reg.amount)}
+                      {amountRemaining(reg.amount) > 0 ? (
+                        <p className="mt-0.5 text-[11px] font-body font-normal text-admin-muted">
+                          {formatCurrency(amountRemaining(reg.amount))} remaining
+                        </p>
+                      ) : null}
                     </td>
                     <td
                       className="px-4 py-4"
@@ -367,23 +366,25 @@ export function RegistrationsTable({
                           <span
                             className={`inline-flex rounded-sm border px-2 py-1 text-[11px] font-heading ${STATUS_STYLES.pending}`}
                           >
-                            Paid
+                            {paymentProgressLabel(reg)}
                           </span>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              onPaymentStatusChange(reg.id, "paid")
-                            }
-                            className="rounded-sm border border-emerald-300 bg-emerald-600 px-2.5 py-1 text-[10px] font-heading uppercase tracking-[0.12em] text-white transition-colors hover:bg-emerald-700"
-                          >
-                            Verify
-                          </button>
+                          {amountRemaining(reg.amount) <= 0 ? (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                onPaymentStatusChange(reg.id, "paid")
+                              }
+                              className="rounded-sm border border-emerald-300 bg-emerald-600 px-2.5 py-1 text-[10px] font-heading uppercase tracking-[0.12em] text-white transition-colors hover:bg-emerald-700"
+                            >
+                              Verify
+                            </button>
+                          ) : null}
                         </div>
                       ) : (
                         <span
                           className={`inline-flex rounded-sm border px-2 py-1.5 text-[11px] font-heading ${STATUS_STYLES[reg.paymentStatus]}`}
                         >
-                          {PAYMENT_STATUS_LABELS[reg.paymentStatus]}
+                          {paymentProgressLabel(reg)}
                         </span>
                       )}
                     </td>
@@ -401,19 +402,6 @@ export function RegistrationsTable({
           </table>
         </div>
       </div>
-
-      {selected ? (
-        <RegistrationDetail
-          registration={selected}
-          onClose={() => setSelectedId(null)}
-          onPaymentStatusChange={onPaymentStatusChange}
-          onMarkPaid={onMarkPaid}
-          onDelete={async (id) => {
-            await onDelete(id);
-            setSelectedId(null);
-          }}
-        />
-      ) : null}
     </>
   );
 }

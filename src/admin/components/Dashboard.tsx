@@ -5,13 +5,10 @@ import { motion } from "framer-motion";
 import { buildDashboardStats, formatCurrency } from "@/admin/analytics";
 import {
   getRegistrations,
-  updatePayment,
   updatePaymentStatus,
-  deleteRegistration,
 } from "@/admin/storage";
 import type { PaymentStatus, Registration } from "@/admin/types";
 import { FeeNotice } from "@/landing/components/FeeNotice";
-import type { ManualPaymentPayload } from "./RegistrationDetail";
 import { AdminShell } from "./AdminShell";
 import { ExportMenu } from "./ExportMenu";
 import { PieChartCard } from "./PieChartCard";
@@ -71,54 +68,6 @@ export function Dashboard() {
     } catch {
       setRegistrations(previous);
       setLoadError("Could not update payment status. Try again.");
-    }
-  }
-
-  async function handleMarkPaid(id: string, payload: ManualPaymentPayload) {
-    const previous = registrations;
-    setRegistrations((rows) =>
-      rows.map((row) =>
-        row.id === id
-          ? {
-              ...row,
-              paymentStatus: "paid",
-              amount: payload.amount,
-              ...(payload.transactionId
-                ? { transactionId: payload.transactionId }
-                : {}),
-            }
-          : row
-      )
-    );
-
-    try {
-      await updatePayment(id, {
-        paymentStatus: "paid",
-        amount: payload.amount,
-        ...(payload.transactionId
-          ? { transactionId: payload.transactionId }
-          : {}),
-      });
-      setLoadError("");
-    } catch {
-      setRegistrations(previous);
-      setLoadError("Could not mark registration as paid. Try again.");
-      throw new Error("Could not mark registration as paid. Try again.");
-    }
-  }
-
-  async function handleDelete(id: string) {
-    try {
-      await deleteRegistration(id);
-      setRegistrations((rows) => rows.filter((row) => row.id !== id));
-      setLoadError("");
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Could not delete registration. Try again.";
-      setLoadError(message);
-      throw error instanceof Error ? error : new Error(message);
     }
   }
 
@@ -211,8 +160,6 @@ export function Dashboard() {
             onPaymentStatusChange={(id, status) => {
               void handlePaymentStatusChange(id, status);
             }}
-            onMarkPaid={handleMarkPaid}
-            onDelete={handleDelete}
           />
         </motion.div>
       )}

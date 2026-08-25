@@ -2,13 +2,14 @@ import {
   addDoc,
   collection,
   deleteDoc,
+  doc,
+  getDoc,
   getDocs,
   limit,
   orderBy,
   query,
   serverTimestamp,
   updateDoc,
-  doc,
   where,
   type DocumentData,
   type QueryDocumentSnapshot,
@@ -17,12 +18,40 @@ import {
   getFirebaseDb,
   REGISTRATIONS_COLLECTION,
 } from "@/shared/firebase/client";
-import type { PaymentStatus, Registration, RegistrationInput } from "./types";
+import {
+  amountRemaining,
+  createPaymentRecord,
+  derivePaymentStatus,
+  isFullyPaid,
+  normalizePayments,
+  sumPayments,
+} from "./payment";
+import type {
+  PaymentRecord,
+  PaymentStatus,
+  Registration,
+  RegistrationInput,
+} from "./types";
 
 function mapRegistration(
-  snapshot: QueryDocumentSnapshot<DocumentData>
+  snapshot: QueryDocumentSnapshot<DocumentData> | { id: string; data: () => DocumentData }
 ): Registration {
   const data = snapshot.data();
+  const createdAt =
+    typeof data.createdAt === "string"
+      ? data.createdAt
+      : data.createdAt?.toDate?.()?.toISOString?.() ??
+        new Date().toISOString();
+
+  const amount = Number(data.amount ?? 0);
+  const transactionId = String(data.transactionId ?? "");
+  const payments = normalizePayments(data.payments, {
+    amount,
+    transactionId,
+    paidAt: createdAt,
+  });
+  const totalPaid = payments.length > 0 ? sumPayments(payments) : amount;
+
   return {
     id: snapshot.id,
     fullName: String(data.fullName ?? ""),
@@ -35,14 +64,12 @@ function mapRegistration(
     zone: data.zone,
     diocese: String(data.diocese ?? ""),
     dietary: data.dietary ?? "none",
-    amount: Number(data.amount ?? 0),
-    transactionId: String(data.transactionId ?? ""),
+    amount: totalPaid,
+    transactionId:
+      payments[payments.length - 1]?.transactionId || transactionId,
     paymentStatus: (data.paymentStatus as PaymentStatus) ?? "unpaid",
-    createdAt:
-      typeof data.createdAt === "string"
-        ? data.createdAt
-        : data.createdAt?.toDate?.()?.toISOString?.() ??
-          new Date().toISOString(),
+    payments,
+    createdAt,
   };
 }
 
@@ -59,6 +86,16 @@ export async function getRegistrations(): Promise<Registration[]> {
   return snapshot.docs.map(mapRegistration);
 }
 
+export async function getRegistrationById(
+  id: string
+): Promise<Registration | null> {
+  const snapshot = await getDoc(
+    doc(getFirebaseDb(), REGISTRATIONS_COLLECTION, id)
+  );
+  if (!snapshot.exists()) return null;
+  return mapRegistration(snapshot);
+}
+
 export async function findRegistrationByEmail(
   email: string
 ): Promise<Registration | null> {
@@ -72,7 +109,6 @@ export async function findRegistrationByEmail(
   );
   let snapshot = await getDocs(emailQuery);
 
-  // Fallback for older records saved with mixed-case email
   if (snapshot.empty) {
     const trimmed = email.trim();
     if (trimmed !== normalized) {
@@ -90,7 +126,7 @@ export async function findRegistrationByEmail(
 
   const rows = snapshot.docs.map(mapRegistration);
   const preferred =
-    rows.find((r) => r.paymentStatus === "unpaid") ??
+    rows.find((r) => amountRemaining(r.amount) > 0) ??
     rows.find((r) => r.paymentStatus === "pending") ??
     [...rows].sort(
       (a, b) =>
@@ -104,9 +140,27 @@ export async function addRegistration(
   input: RegistrationInput
 ): Promise<Registration> {
   const createdAt = new Date().toISOString();
+  const payments =
+    input.payments?.length > 0
+      ? input.payments
+      : input.amount > 0
+        ? [
+            createPaymentRecord({
+              amount: input.amount,
+              transactionId: input.transactionId,
+              source: "register",
+              paidAt: createdAt,
+            }),
+          ]
+        : [];
+  const amount = sumPayments(payments);
   const payload = {
     ...input,
     email: normalizeEmail(input.email),
+    amount,
+    transactionId: payments[payments.length - 1]?.transactionId ?? "",
+    payments,
+    paymentStatus: input.paymentStatus || derivePaymentStatus(amount),
     createdAt,
     createdAtServer: serverTimestamp(),
   };
@@ -118,6 +172,10 @@ export async function addRegistration(
   return {
     ...input,
     email: payload.email,
+    amount,
+    transactionId: payload.transactionId,
+    payments,
+    paymentStatus: payload.paymentStatus,
     id: docRef.id,
     createdAt,
   };
@@ -136,18 +194,15 @@ export interface PaymentUpdateInput {
   paymentStatus: PaymentStatus;
   amount?: number;
   transactionId?: string;
+  payments?: PaymentRecord[];
 }
 
-/** Admin: set status and optionally amount / transaction ID (cash or UPI verify). */
+/** Admin: set status and optionally rewrite payment totals / history. */
 export async function updatePayment(
   id: string,
   input: PaymentUpdateInput
 ): Promise<void> {
-  const payload: {
-    paymentStatus: PaymentStatus;
-    amount?: number;
-    transactionId?: string;
-  } = {
+  const payload: Record<string, unknown> = {
     paymentStatus: input.paymentStatus,
   };
 
@@ -162,21 +217,128 @@ export async function updatePayment(
     payload.transactionId = input.transactionId.trim();
   }
 
+  if (input.payments) {
+    payload.payments = input.payments;
+    payload.amount = sumPayments(input.payments);
+    payload.transactionId =
+      input.payments[input.payments.length - 1]?.transactionId ?? "";
+  }
+
   await updateDoc(doc(getFirebaseDb(), REGISTRATIONS_COLLECTION, id), payload);
 }
 
-export async function submitRegistrationPayment(
+/** Student: append an installment toward the fee. */
+export async function appendRegistrationPayment(
   id: string,
+  amount: number,
   transactionId: string
-): Promise<void> {
+): Promise<Registration> {
   const txn = transactionId.trim();
   if (txn.length < 8) {
     throw new Error("Transaction ID must be at least 8 characters.");
   }
+  if (!Number.isFinite(amount) || amount < 1) {
+    throw new Error("Enter a valid payment amount.");
+  }
+
+  const current = await getRegistrationById(id);
+  if (!current) {
+    throw new Error("Registration not found.");
+  }
+  if (current.paymentStatus === "paid" && isFullyPaid(current.amount)) {
+    throw new Error("This registration is already fully paid.");
+  }
+
+  const remaining = amountRemaining(current.amount);
+  if (remaining <= 0) {
+    throw new Error(
+      "Fee is already fully paid. Waiting for admin verification."
+    );
+  }
+  if (amount > remaining) {
+    throw new Error(`You can pay at most ₹${remaining} remaining.`);
+  }
+
+  const nextPayment = createPaymentRecord({
+    amount,
+    transactionId: txn,
+    source: "payment",
+  });
+  const payments = [...current.payments, nextPayment];
+  const totalPaid = sumPayments(payments);
 
   await updateDoc(doc(getFirebaseDb(), REGISTRATIONS_COLLECTION, id), {
+    payments,
+    amount: totalPaid,
     transactionId: txn,
     paymentStatus: "pending" as PaymentStatus,
+  });
+
+  return {
+    ...current,
+    payments,
+    amount: totalPaid,
+    transactionId: txn,
+    paymentStatus: "pending",
+  };
+}
+
+/** @deprecated Prefer appendRegistrationPayment for installments. */
+export async function submitRegistrationPayment(
+  id: string,
+  transactionId: string
+): Promise<void> {
+  const current = await getRegistrationById(id);
+  if (!current) throw new Error("Registration not found.");
+  const remaining = amountRemaining(current.amount);
+  const payAmount = remaining > 0 ? remaining : current.amount || 0;
+  if (payAmount < 1) {
+    await updateDoc(doc(getFirebaseDb(), REGISTRATIONS_COLLECTION, id), {
+      transactionId: transactionId.trim(),
+      paymentStatus: "pending" as PaymentStatus,
+    });
+    return;
+  }
+  await appendRegistrationPayment(id, payAmount, transactionId);
+}
+
+/** Admin: record a cash / manual installment. */
+export async function appendAdminPayment(
+  id: string,
+  amount: number,
+  transactionId?: string
+): Promise<void> {
+  const current = await getRegistrationById(id);
+  if (!current) throw new Error("Registration not found.");
+
+  const remaining = amountRemaining(current.amount);
+  if (remaining <= 0) {
+    throw new Error("Fee is already fully paid for this registration.");
+  }
+  if (!Number.isFinite(amount) || amount < 1) {
+    throw new Error("Enter a valid amount.");
+  }
+  const payAmount = Math.min(amount, remaining);
+  const txn = (transactionId ?? "").trim();
+  const nextPayment = createPaymentRecord({
+    amount: payAmount,
+    transactionId: txn.length >= 8 ? txn : `CASH-${Date.now()}`,
+    source: "admin",
+  });
+  // Firestore create rule requires txn >= 8; admin cash uses CASH- prefix.
+  if (nextPayment.transactionId.length < 8) {
+    nextPayment.transactionId = `CASH-${Date.now()}`;
+  }
+
+  const payments = [...current.payments, nextPayment];
+  const totalPaid = sumPayments(payments);
+  const fully = isFullyPaid(totalPaid);
+
+  await updateDoc(doc(getFirebaseDb(), REGISTRATIONS_COLLECTION, id), {
+    payments,
+    amount: totalPaid,
+    transactionId: nextPayment.transactionId,
+    paymentStatus: (fully ? "paid" : "pending") as PaymentStatus,
   });
 }
 

@@ -2,11 +2,35 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isValidPaymentEntry(entry) {
+      return entry.keys().hasAll(['amount', 'transactionId', 'paidAt'])
+        && entry.amount is number
+        && entry.amount > 0
+        && entry.amount <= 950
+        && entry.transactionId is string
+        && entry.transactionId.size() >= 8
+        && entry.paidAt is string
+        && entry.paidAt.size() > 0;
+    }
+
+    function isValidPaymentsList(payments) {
+      return payments is list
+        && payments.size() > 0
+        && payments.size() <= 20
+        && isValidPaymentEntry(payments[payments.size() - 1]);
+    }
+
+    function latestPayment() {
+      return request.resource.data.payments[
+        request.resource.data.payments.size() - 1
+      ];
+    }
+
     function isValidRegistrationCreate() {
       return request.resource.data.keys().hasAll([
           'fullName', 'email', 'phone', 'gender', 'college', 'course',
           'year', 'zone', 'diocese', 'dietary', 'amount',
-          'transactionId', 'paymentStatus', 'createdAt'
+          'transactionId', 'paymentStatus', 'payments', 'createdAt'
         ])
         && request.resource.data.fullName is string
         && request.resource.data.fullName.size() > 0
@@ -17,7 +41,10 @@ service cloud.firestore {
         && request.resource.data.amount is number
         && request.resource.data.amount > 0
         && request.resource.data.amount <= 950
+        && request.resource.data.amount == latestPayment().amount
+        && request.resource.data.transactionId == latestPayment().transactionId
         && request.resource.data.paymentStatus == 'pending'
+        && isValidPaymentsList(request.resource.data.payments)
         && request.resource.data.gender in ['male', 'female']
         && request.resource.data.year in ['1', '2', '3', '4', '5', 'pg']
         && request.resource.data.zone in ['kannur', 'kasargod', 'thalassery', 'kozhikode', 'mananthavady']
@@ -26,23 +53,47 @@ service cloud.firestore {
 
     function isAdminPaymentUpdate() {
       return request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['paymentStatus', 'amount', 'transactionId'])
+            .hasOnly(['paymentStatus', 'amount', 'transactionId', 'payments'])
         && request.resource.data.paymentStatus in ['paid', 'unpaid', 'pending']
         && request.resource.data.amount is number
         && request.resource.data.amount >= 0
-        && request.resource.data.transactionId is string;
+        && request.resource.data.transactionId is string
+        && (
+          !request.resource.data.keys().hasAny(['payments'])
+          || request.resource.data.payments is list
+        );
+    }
+
+    function previousPaymentsSize() {
+      return resource.data.keys().hasAny(['payments'])
+        && resource.data.payments is list
+        ? resource.data.payments.size()
+        : 0;
     }
 
     function isPublicPaymentSubmit() {
       return request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['paymentStatus', 'transactionId', 'amount'])
-        && resource.data.paymentStatus in ['unpaid', 'pending']
+            .hasOnly(['paymentStatus', 'transactionId', 'amount', 'payments'])
         && resource.data.paymentStatus != 'paid'
         && request.resource.data.paymentStatus == 'pending'
         && request.resource.data.transactionId is string
         && request.resource.data.transactionId.size() >= 8
         && request.resource.data.amount is number
-        && request.resource.data.amount > 0;
+        && request.resource.data.amount > 0
+        && request.resource.data.amount <= 950
+        && request.resource.data.payments is list
+        && (
+          request.resource.data.payments.size() == previousPaymentsSize() + 1
+          || (
+            previousPaymentsSize() == 0
+            && resource.data.amount is number
+            && resource.data.amount > 0
+            && request.resource.data.payments.size() == 2
+          )
+        )
+        && isValidPaymentEntry(latestPayment())
+        && request.resource.data.transactionId == latestPayment().transactionId
+        && request.resource.data.amount == resource.data.amount + latestPayment().amount;
     }
 
     match /registrations/{registrationId} {

@@ -1,7 +1,9 @@
 import type { Registration } from "../types";
 
+type SeedRegistration = Omit<Registration, "payments">;
+
 /** Realistic demo registrations so the admin dashboard has data to visualize. */
-export const SEED_REGISTRATIONS: Registration[] = [
+const RAW_SEED_REGISTRATIONS: SeedRegistration[] = [
   {
     id: "seed-001",
     fullName: "Anoop Joseph",
@@ -411,3 +413,21 @@ export const SEED_REGISTRATIONS: Registration[] = [
     createdAt: "2026-08-10T06:10:00.000Z",
   },
 ];
+
+export const SEED_REGISTRATIONS: Registration[] = RAW_SEED_REGISTRATIONS.map(
+  (registration) => ({
+    ...registration,
+    payments:
+      registration.amount > 0
+        ? [
+            {
+              amount: registration.amount,
+              transactionId:
+                registration.transactionId || `SEED-${registration.id}`,
+              paidAt: registration.createdAt,
+              source: "admin",
+            },
+          ]
+        : [],
+  })
+);
