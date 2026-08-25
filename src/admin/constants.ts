@@ -29,9 +29,9 @@ export const DIETARY_LABELS: Record<Dietary, string> = {
 };
 
 export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
-  paid: "Paid",
+  paid: "Verified",
   unpaid: "Unpaid",
-  pending: "Pending",
+  pending: "Paid",
 };
 
 export const ZONE_COLORS: Record<Zone, string> = {

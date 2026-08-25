@@ -152,9 +152,9 @@ export function Dashboard() {
                 Reports & Analytics
               </p>
               <p className="mt-2 max-w-xl text-sm leading-relaxed text-admin-muted">
-                Participants pay ₹950 on registration (UPI). Confirm pending
-                payments, or mark cash collections as paid from a registrant’s
-                details. Received{" "}
+                Registrants pay on signup and show as Paid. Click Verify after
+                you confirm the UPI (or mark cash collections manually).
+                Received{" "}
                 <span className="font-heading font-semibold text-admin-ink">
                   {formatCurrency(stats.amountReceived)}
                 </span>
@@ -177,7 +177,7 @@ export function Dashboard() {
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <PieChartCard
               title="Payment Status"
-              description="Paid (confirmed), pending UPI verification, or unpaid."
+              description="Paid (awaiting verify), verified, or unpaid."
               data={stats.payments}
             />
             <PieChartCard

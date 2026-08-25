@@ -244,8 +244,8 @@ export function RegistrationsTable({
               className="appearance-none rounded-sm border border-admin-border bg-admin-elevated px-3 py-2.5 text-sm text-admin-ink focus:border-gold/50 focus:outline-none"
             >
               <option value="all">All payments</option>
-              <option value="paid">Paid</option>
-              <option value="pending">Pending</option>
+              <option value="pending">Paid (verify)</option>
+              <option value="paid">Verified</option>
               <option value="unpaid">Unpaid</option>
             </select>
           </div>
@@ -362,25 +362,30 @@ export function RegistrationsTable({
                       onClick={(e) => e.stopPropagation()}
                       onKeyDown={(e) => e.stopPropagation()}
                     >
-                      <select
-                        value={reg.paymentStatus}
-                        onChange={(e) =>
-                          onPaymentStatusChange(
-                            reg.id,
-                            e.target.value as PaymentStatus
-                          )
-                        }
-                        className={`appearance-none rounded-sm border px-2 py-1.5 text-[11px] font-heading ${STATUS_STYLES[reg.paymentStatus]}`}
-                        aria-label={`Payment status for ${reg.fullName}`}
-                      >
-                        {(
-                          Object.keys(PAYMENT_STATUS_LABELS) as PaymentStatus[]
-                        ).map((status) => (
-                          <option key={status} value={status}>
-                            {PAYMENT_STATUS_LABELS[status]}
-                          </option>
-                        ))}
-                      </select>
+                      {reg.paymentStatus === "pending" ? (
+                        <div className="flex flex-col items-start gap-1.5">
+                          <span
+                            className={`inline-flex rounded-sm border px-2 py-1 text-[11px] font-heading ${STATUS_STYLES.pending}`}
+                          >
+                            Paid
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              onPaymentStatusChange(reg.id, "paid")
+                            }
+                            className="rounded-sm border border-emerald-300 bg-emerald-600 px-2.5 py-1 text-[10px] font-heading uppercase tracking-[0.12em] text-white transition-colors hover:bg-emerald-700"
+                          >
+                            Verify
+                          </button>
+                        </div>
+                      ) : (
+                        <span
+                          className={`inline-flex rounded-sm border px-2 py-1.5 text-[11px] font-heading ${STATUS_STYLES[reg.paymentStatus]}`}
+                        >
+                          {PAYMENT_STATUS_LABELS[reg.paymentStatus]}
+                        </span>
+                      )}
                     </td>
                     <td className="px-5 py-4 text-admin-muted md:px-6">
                       {new Date(reg.createdAt).toLocaleDateString("en-IN", {

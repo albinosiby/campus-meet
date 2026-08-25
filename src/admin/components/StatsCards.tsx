@@ -31,7 +31,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
       icon: Banknote,
       accent: "text-emerald-700",
       ring: "border-emerald-200 bg-emerald-50",
-      hint: `${stats.paidCount} marked paid`,
+      hint: `${stats.paidCount} verified`,
     },
     {
       label: "Amount Remaining",
@@ -42,15 +42,15 @@ export function StatsCards({ stats }: StatsCardsProps) {
       hint: `of ${formatCurrency(stats.amountExpected)} expected`,
     },
     {
-      label: "Pending Verification",
+      label: "Awaiting Verify",
       value: formatCurrency(stats.amountPending),
       icon: Clock3,
       accent: "text-amber-700",
       ring: "border-amber-200 bg-amber-50",
-      hint: `${stats.pendingCount} awaiting confirm`,
+      hint: `${stats.pendingCount} paid — verify`,
     },
     {
-      label: "Paid / Unpaid",
+      label: "Verified / Unpaid",
       value: `${stats.paidCount} / ${stats.unpaidCount}`,
       icon: CircleAlert,
       accent: "text-accent-blue",

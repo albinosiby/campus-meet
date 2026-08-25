@@ -199,7 +199,7 @@ export function RegistrationDetail({
               value={DIETARY_LABELS[reg.dietary]}
             />
             <DetailRow
-              label="Amount paid / claimed"
+              label="Amount paid"
               value={formatCurrency(reg.amount)}
             />
             <DetailRow
@@ -217,25 +217,11 @@ export function RegistrationDetail({
             <DetailRow
               label="Payment status"
               value={
-                <select
-                  value={reg.paymentStatus}
-                  onChange={(e) =>
-                    onPaymentStatusChange(
-                      reg.id,
-                      e.target.value as PaymentStatus
-                    )
-                  }
-                  className={`mt-1 appearance-none rounded-sm border px-2.5 py-1.5 text-[11px] font-heading ${STATUS_STYLES[reg.paymentStatus]}`}
-                  aria-label={`Payment status for ${reg.fullName}`}
+                <span
+                  className={`inline-flex rounded-sm border px-2.5 py-1.5 text-[11px] font-heading ${STATUS_STYLES[reg.paymentStatus]}`}
                 >
-                  {(Object.keys(PAYMENT_STATUS_LABELS) as PaymentStatus[]).map(
-                    (status) => (
-                      <option key={status} value={status}>
-                        {PAYMENT_STATUS_LABELS[status]}
-                      </option>
-                    )
-                  )}
-                </select>
+                  {PAYMENT_STATUS_LABELS[reg.paymentStatus]}
+                </span>
               }
             />
             <DetailRow
@@ -255,13 +241,43 @@ export function RegistrationDetail({
             />
           </dl>
 
+          {reg.paymentStatus === "pending" ? (
+            <div className="my-4 rounded-sm border border-emerald-200 bg-emerald-50/80 p-4">
+              <p className="text-[10px] font-heading uppercase tracking-[0.18em] text-emerald-800">
+                Payment submitted
+              </p>
+              <p className="mt-1.5 text-xs leading-relaxed text-emerald-900/80">
+                Registrant paid {formatCurrency(reg.amount)}
+                {reg.transactionId ? (
+                  <>
+                    {" "}
+                    (txn{" "}
+                    <code className="font-mono text-[11px]">
+                      {reg.transactionId}
+                    </code>
+                    )
+                  </>
+                ) : null}
+                . Confirm in your UPI app, then verify.
+              </p>
+              <button
+                type="button"
+                onClick={() => onPaymentStatusChange(reg.id, "paid")}
+                className="mt-3 inline-flex w-full items-center justify-center rounded-sm border border-emerald-300 bg-emerald-600 px-3 py-2.5 text-xs font-heading uppercase tracking-[0.14em] text-white transition-colors hover:bg-emerald-700"
+              >
+                Verify payment
+              </button>
+            </div>
+          ) : null}
+
+          {reg.paymentStatus === "unpaid" ? (
           <div className="my-4 rounded-sm border border-emerald-200 bg-emerald-50/80 p-4">
             <p className="text-[10px] font-heading uppercase tracking-[0.18em] text-emerald-800">
               Mark paid manually
             </p>
             <p className="mt-1.5 text-xs leading-relaxed text-emerald-900/80">
-              Use when fee was collected in cash or by an admin. Sets status to
-              Paid with the amount below.
+              Use when fee was collected in cash or by an admin. Marks as
+              verified with the amount below.
             </p>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <div>
@@ -314,6 +330,7 @@ export function RegistrationDetail({
               {savingPaid ? "Saving…" : "Mark as paid"}
             </button>
           </div>
+          ) : null}
         </div>
 
         <div className="space-y-3 border-t border-admin-border px-5 py-4 md:px-6">
