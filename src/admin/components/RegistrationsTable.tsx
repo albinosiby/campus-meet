@@ -376,7 +376,7 @@ export function RegistrationsTable({
                               }
                               className="rounded-sm border border-emerald-300 bg-emerald-600 px-2.5 py-1 text-[10px] font-heading uppercase tracking-[0.12em] text-white transition-colors hover:bg-emerald-700"
                             >
-                              Verify
+                              Verify now
                             </button>
                           ) : null}
                         </div>
