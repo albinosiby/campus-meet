@@ -137,7 +137,7 @@ export function RegistrationPaymentFields({
             id="transactionId"
             name="transactionId"
             required
-            minLength={6}
+            minLength={8}
             value={transactionId}
             onChange={(e) => onTransactionIdChange(e.target.value)}
             className={fieldClass}

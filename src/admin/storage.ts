@@ -170,8 +170,8 @@ export async function submitRegistrationPayment(
   transactionId: string
 ): Promise<void> {
   const txn = transactionId.trim();
-  if (txn.length < 6) {
-    throw new Error("Transaction ID must be at least 6 characters.");
+  if (txn.length < 8) {
+    throw new Error("Transaction ID must be at least 8 characters.");
   }
 
   await updateDoc(doc(getFirebaseDb(), REGISTRATIONS_COLLECTION, id), {

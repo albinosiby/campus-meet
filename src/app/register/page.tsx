@@ -82,8 +82,8 @@ export default function RegisterPage() {
           `Enter a valid amount between 1 and ${EVENT_PAYMENT.amount}.`
         );
       }
-      if (transactionId.length < 6) {
-        throw new Error("Transaction ID must be at least 6 characters.");
+      if (transactionId.length < 8) {
+        throw new Error("Transaction ID must be at least 8 characters.");
       }
 
       const registration = await addRegistration({

@@ -77,7 +77,7 @@ export default function PaymentPage() {
 
     const txn = transactionId.trim();
     if (txn.length < 6) {
-      setError("Enter a valid transaction ID (at least 6 characters).");
+      setError("Enter a valid transaction ID (at least 8 characters).");
       return;
     }
 
@@ -290,7 +290,7 @@ export default function PaymentPage() {
                   id="transactionId"
                   name="transactionId"
                   required
-                  minLength={6}
+                  minLength={8}
                   value={transactionId}
                   onChange={(e) => setTransactionId(e.target.value)}
                   className={fieldClass}
@@ -312,7 +312,7 @@ export default function PaymentPage() {
 
               <button
                 type="submit"
-                disabled={submitting || transactionId.trim().length < 6}
+                disabled={submitting || transactionId.trim().length < 8}
                 className="btn-primary w-full justify-center disabled:opacity-60"
               >
                 {submitting ? "SUBMITTING…" : "SUBMIT PAYMENT"}

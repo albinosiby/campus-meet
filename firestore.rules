@@ -13,7 +13,7 @@ service cloud.firestore {
         && request.resource.data.email is string
         && request.resource.data.phone is string
         && request.resource.data.transactionId is string
-        && request.resource.data.transactionId.size() >= 6
+        && request.resource.data.transactionId.size() >= 8
         && request.resource.data.amount is number
         && request.resource.data.amount > 0
         && request.resource.data.amount <= 950
@@ -40,7 +40,7 @@ service cloud.firestore {
         && resource.data.paymentStatus != 'paid'
         && request.resource.data.paymentStatus == 'pending'
         && request.resource.data.transactionId is string
-        && request.resource.data.transactionId.size() >= 6
+        && request.resource.data.transactionId.size() >= 8
         && request.resource.data.amount is number
         && request.resource.data.amount > 0;
     }
