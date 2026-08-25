@@ -7,7 +7,6 @@ import {
   Clock3,
   TrendingUp,
   Users,
-  Wallet,
 } from "lucide-react";
 import { formatCurrency } from "@/admin/analytics";
 import type { DashboardStats } from "@/admin/types";
@@ -34,20 +33,12 @@ export function StatsCards({ stats }: StatsCardsProps) {
       hint: `${stats.paidCount} verified`,
     },
     {
-      label: "Amount Remaining",
-      value: formatCurrency(stats.amountRemaining),
-      icon: Wallet,
-      accent: "text-rose-700",
-      ring: "border-rose-200 bg-rose-50",
-      hint: `of ${formatCurrency(stats.amountExpected)} expected`,
-    },
-    {
       label: "Awaiting Verify",
-      value: formatCurrency(stats.amountPending),
+      value: String(stats.pendingCount),
       icon: Clock3,
       accent: "text-amber-700",
       ring: "border-amber-200 bg-amber-50",
-      hint: `${stats.pendingCount} paid — verify`,
+      hint: "paid — need verify",
     },
     {
       label: "Verified / Unpaid",

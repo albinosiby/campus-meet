@@ -154,13 +154,9 @@ export function Dashboard() {
               <p className="mt-2 max-w-xl text-sm leading-relaxed text-admin-muted">
                 Registrants pay on signup and show as Paid. Click Verify after
                 you confirm the UPI (or mark cash collections manually).
-                Received{" "}
+                Verified received:{" "}
                 <span className="font-heading font-semibold text-admin-ink">
                   {formatCurrency(stats.amountReceived)}
-                </span>
-                ; remaining{" "}
-                <span className="font-heading font-semibold text-admin-ink">
-                  {formatCurrency(stats.amountRemaining)}
                 </span>
                 .
               </p>

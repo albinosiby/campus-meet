@@ -45,8 +45,6 @@ export interface DashboardStats {
   pendingCount: number;
   amountReceived: number;
   amountPending: number;
-  amountExpected: number;
-  amountRemaining: number;
   zones: ChartSlice[];
   genders: ChartSlice[];
   years: ChartSlice[];

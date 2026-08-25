@@ -29,7 +29,7 @@ export function downloadPdf(
   );
 
   doc.text(
-    `Amount received: ₹${stats.amountReceived}  ·  Pending: ₹${stats.amountPending}  ·  Expected: ₹${stats.amountExpected}`,
+    `Amount received: ₹${stats.amountReceived}  ·  Awaiting verify: ₹${stats.amountPending}`,
     marginX,
     74
   );

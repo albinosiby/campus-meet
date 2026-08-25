@@ -21,7 +21,6 @@ import type {
   YearOfStudy,
   Zone,
 } from "./types";
-import { EVENT_PAYMENT } from "@/landing/data/eventData";
 
 function startOfDay(date: Date): Date {
   const d = new Date(date);
@@ -92,8 +91,6 @@ export function buildDashboardStats(registrations: Registration[]): DashboardSta
   const paid = registrations.filter((r) => r.paymentStatus === "paid");
   const unpaid = registrations.filter((r) => r.paymentStatus === "unpaid");
   const pending = registrations.filter((r) => r.paymentStatus === "pending");
-  const fee = EVENT_PAYMENT.amount;
-  const amountExpected = registrations.length * fee;
   const amountReceived = paid.reduce((sum, r) => sum + (r.amount || 0), 0);
   const amountPending = pending.reduce((sum, r) => sum + (r.amount || 0), 0);
 
@@ -109,8 +106,6 @@ export function buildDashboardStats(registrations: Registration[]): DashboardSta
     pendingCount: pending.length,
     amountReceived,
     amountPending,
-    amountExpected,
-    amountRemaining: Math.max(0, amountExpected - amountReceived),
     zones: countByKey(
       registrations,
       (r) => r.zone as Zone,
