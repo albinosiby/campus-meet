@@ -9,6 +9,8 @@ export interface RegistrationDraft {
   zone: string;
   diocese: string;
   dietary: string;
+  amountPaid: string;
+  transactionId: string;
 }
 
 export const EMPTY_REGISTRATION_DRAFT: RegistrationDraft = {
@@ -22,9 +24,11 @@ export const EMPTY_REGISTRATION_DRAFT: RegistrationDraft = {
   zone: "",
   diocese: "",
   dietary: "none",
+  amountPaid: "",
+  transactionId: "",
 };
 
-const DRAFT_STORAGE_KEY = "malabar-campus-meet-registration-draft";
+const DRAFT_STORAGE_KEY = "malabar-campus-meet-registration-draft-v3";
 
 export function loadRegistrationDraft(): RegistrationDraft {
   if (typeof window === "undefined") return EMPTY_REGISTRATION_DRAFT;
@@ -32,7 +36,12 @@ export function loadRegistrationDraft(): RegistrationDraft {
     const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
     if (!raw) return EMPTY_REGISTRATION_DRAFT;
     const parsed = JSON.parse(raw) as Partial<RegistrationDraft>;
-    return { ...EMPTY_REGISTRATION_DRAFT, ...parsed };
+    return {
+      ...EMPTY_REGISTRATION_DRAFT,
+      ...parsed,
+      // Never restore a prefilled fee — amount must be entered each time.
+      amountPaid: "",
+    };
   } catch {
     return EMPTY_REGISTRATION_DRAFT;
   }

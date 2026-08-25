@@ -12,12 +12,19 @@ import {
 } from "@/admin/constants";
 import { formatCurrency } from "@/admin/analytics";
 import type { PaymentStatus, Registration } from "@/admin/types";
+import { EVENT_PAYMENT } from "@/landing/data/eventData";
 import { formatPassId } from "@/shared/passId";
+
+export interface ManualPaymentPayload {
+  amount: number;
+  transactionId?: string;
+}
 
 interface RegistrationDetailProps {
   registration: Registration;
   onClose: () => void;
   onPaymentStatusChange: (id: string, status: PaymentStatus) => void;
+  onMarkPaid: (id: string, payload: ManualPaymentPayload) => Promise<void> | void;
   onDelete: (id: string) => Promise<void> | void;
 }
 
@@ -26,6 +33,9 @@ const STATUS_STYLES: Record<PaymentStatus, string> = {
   unpaid: "border-red-200 bg-red-50 text-red-700",
   pending: "border-amber-200 bg-amber-50 text-amber-800",
 };
+
+const fieldClass =
+  "mt-1 w-full rounded-sm border border-admin-border bg-admin-elevated px-3 py-2 text-sm text-admin-ink focus:border-gold/40 focus:outline-none";
 
 function DetailRow({
   label,
@@ -48,11 +58,24 @@ export function RegistrationDetail({
   registration: reg,
   onClose,
   onPaymentStatusChange,
+  onMarkPaid,
   onDelete,
 }: RegistrationDetailProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+  const [manualAmount, setManualAmount] = useState(
+    String(reg.amount > 0 ? reg.amount : EVENT_PAYMENT.amount)
+  );
+  const [manualTxn, setManualTxn] = useState(reg.transactionId || "");
+  const [savingPaid, setSavingPaid] = useState(false);
+  const [paidError, setPaidError] = useState("");
+
+  useEffect(() => {
+    setManualAmount(String(reg.amount > 0 ? reg.amount : EVENT_PAYMENT.amount));
+    setManualTxn(reg.transactionId || "");
+    setPaidError("");
+  }, [reg.id, reg.amount, reg.transactionId]);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -80,6 +103,36 @@ export function RegistrationDetail({
       );
       setDeleting(false);
       setConfirmDelete(false);
+    }
+  }
+
+  async function handleMarkPaid() {
+    setPaidError("");
+    const amount = Number(manualAmount);
+    if (!Number.isFinite(amount) || amount < 1) {
+      setPaidError("Enter a valid amount collected.");
+      return;
+    }
+    if (amount > EVENT_PAYMENT.amount) {
+      setPaidError(`Amount cannot exceed ₹${EVENT_PAYMENT.amount}.`);
+      return;
+    }
+
+    setSavingPaid(true);
+    try {
+      const txn = manualTxn.trim();
+      await onMarkPaid(reg.id, {
+        amount,
+        ...(txn ? { transactionId: txn } : {}),
+      });
+    } catch (error) {
+      setPaidError(
+        error instanceof Error
+          ? error.message
+          : "Could not mark as paid. Try again."
+      );
+    } finally {
+      setSavingPaid(false);
     }
   }
 
@@ -145,7 +198,10 @@ export function RegistrationDetail({
               label="Dietary preference"
               value={DIETARY_LABELS[reg.dietary]}
             />
-            <DetailRow label="Amount" value={formatCurrency(reg.amount)} />
+            <DetailRow
+              label="Amount paid / claimed"
+              value={formatCurrency(reg.amount)}
+            />
             <DetailRow
               label="Transaction ID"
               value={
@@ -198,6 +254,66 @@ export function RegistrationDetail({
               }
             />
           </dl>
+
+          <div className="my-4 rounded-sm border border-emerald-200 bg-emerald-50/80 p-4">
+            <p className="text-[10px] font-heading uppercase tracking-[0.18em] text-emerald-800">
+              Mark paid manually
+            </p>
+            <p className="mt-1.5 text-xs leading-relaxed text-emerald-900/80">
+              Use when fee was collected in cash or by an admin. Sets status to
+              Paid with the amount below.
+            </p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <div>
+                <label
+                  htmlFor="manual-amount"
+                  className="text-[10px] font-heading uppercase tracking-[0.14em] text-admin-muted"
+                >
+                  Amount collected *
+                </label>
+                <input
+                  id="manual-amount"
+                  type="number"
+                  min={1}
+                  max={EVENT_PAYMENT.amount}
+                  step={1}
+                  value={manualAmount}
+                  onChange={(e) => setManualAmount(e.target.value)}
+                  className={fieldClass}
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="manual-txn"
+                  className="text-[10px] font-heading uppercase tracking-[0.14em] text-admin-muted"
+                >
+                  Transaction ID (optional)
+                </label>
+                <input
+                  id="manual-txn"
+                  type="text"
+                  value={manualTxn}
+                  onChange={(e) => setManualTxn(e.target.value)}
+                  className={fieldClass}
+                  placeholder="If any"
+                  autoComplete="off"
+                />
+              </div>
+            </div>
+            {paidError ? (
+              <p className="mt-2 text-xs text-red-600" role="alert">
+                {paidError}
+              </p>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => void handleMarkPaid()}
+              disabled={savingPaid}
+              className="mt-3 inline-flex w-full items-center justify-center rounded-sm border border-emerald-300 bg-emerald-600 px-3 py-2.5 text-xs font-heading uppercase tracking-[0.14em] text-white transition-colors hover:bg-emerald-700 disabled:opacity-60"
+            >
+              {savingPaid ? "Saving…" : "Mark as paid"}
+            </button>
+          </div>
         </div>
 
         <div className="space-y-3 border-t border-admin-border px-5 py-4 md:px-6">

@@ -132,6 +132,39 @@ export async function updatePaymentStatus(
   });
 }
 
+export interface PaymentUpdateInput {
+  paymentStatus: PaymentStatus;
+  amount?: number;
+  transactionId?: string;
+}
+
+/** Admin: set status and optionally amount / transaction ID (cash or UPI verify). */
+export async function updatePayment(
+  id: string,
+  input: PaymentUpdateInput
+): Promise<void> {
+  const payload: {
+    paymentStatus: PaymentStatus;
+    amount?: number;
+    transactionId?: string;
+  } = {
+    paymentStatus: input.paymentStatus,
+  };
+
+  if (typeof input.amount === "number") {
+    if (!Number.isFinite(input.amount) || input.amount < 0) {
+      throw new Error("Enter a valid amount.");
+    }
+    payload.amount = input.amount;
+  }
+
+  if (typeof input.transactionId === "string") {
+    payload.transactionId = input.transactionId.trim();
+  }
+
+  await updateDoc(doc(getFirebaseDb(), REGISTRATIONS_COLLECTION, id), payload);
+}
+
 export async function submitRegistrationPayment(
   id: string,
   transactionId: string

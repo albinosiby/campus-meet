@@ -36,7 +36,7 @@ export function FeeNotice({ variant = "dark", className = "" }: FeeNoticeProps) 
               : "border-gold/30 bg-gold/10 text-gold-dim"
           }`}
         >
-          Pay later
+          Pay on register
         </p>
       </div>
       <p className={`mt-3 text-sm leading-relaxed ${muted}`}>

@@ -3,10 +3,11 @@
 import {
   Banknote,
   CalendarDays,
-  Clock3,
   CircleAlert,
+  Clock3,
   TrendingUp,
   Users,
+  Wallet,
 } from "lucide-react";
 import { formatCurrency } from "@/admin/analytics";
 import type { DashboardStats } from "@/admin/types";
@@ -30,13 +31,23 @@ export function StatsCards({ stats }: StatsCardsProps) {
       icon: Banknote,
       accent: "text-emerald-700",
       ring: "border-emerald-200 bg-emerald-50",
+      hint: `${stats.paidCount} marked paid`,
     },
     {
-      label: "Pending Amount",
+      label: "Amount Remaining",
+      value: formatCurrency(stats.amountRemaining),
+      icon: Wallet,
+      accent: "text-rose-700",
+      ring: "border-rose-200 bg-rose-50",
+      hint: `of ${formatCurrency(stats.amountExpected)} expected`,
+    },
+    {
+      label: "Pending Verification",
       value: formatCurrency(stats.amountPending),
       icon: Clock3,
       accent: "text-amber-700",
       ring: "border-amber-200 bg-amber-50",
+      hint: `${stats.pendingCount} awaiting confirm`,
     },
     {
       label: "Paid / Unpaid",
@@ -78,6 +89,11 @@ export function StatsCards({ stats }: StatsCardsProps) {
                 <p className="mt-3 font-heading text-2xl font-extrabold tabular-nums text-admin-ink md:text-3xl">
                   {card.value}
                 </p>
+                {"hint" in card && card.hint ? (
+                  <p className="mt-1.5 text-[11px] text-admin-muted">
+                    {card.hint}
+                  </p>
+                ) : null}
               </div>
               <div
                 className={`flex h-10 w-10 items-center justify-center rounded-sm border ${card.ring}`}

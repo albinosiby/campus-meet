@@ -3,9 +3,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { buildDashboardStats, formatCurrency } from "@/admin/analytics";
-import { getRegistrations, updatePaymentStatus, deleteRegistration } from "@/admin/storage";
+import {
+  getRegistrations,
+  updatePayment,
+  updatePaymentStatus,
+  deleteRegistration,
+} from "@/admin/storage";
 import type { PaymentStatus, Registration } from "@/admin/types";
 import { FeeNotice } from "@/landing/components/FeeNotice";
+import type { ManualPaymentPayload } from "./RegistrationDetail";
 import { AdminShell } from "./AdminShell";
 import { ExportMenu } from "./ExportMenu";
 import { PieChartCard } from "./PieChartCard";
@@ -68,6 +74,39 @@ export function Dashboard() {
     }
   }
 
+  async function handleMarkPaid(id: string, payload: ManualPaymentPayload) {
+    const previous = registrations;
+    setRegistrations((rows) =>
+      rows.map((row) =>
+        row.id === id
+          ? {
+              ...row,
+              paymentStatus: "paid",
+              amount: payload.amount,
+              ...(payload.transactionId
+                ? { transactionId: payload.transactionId }
+                : {}),
+            }
+          : row
+      )
+    );
+
+    try {
+      await updatePayment(id, {
+        paymentStatus: "paid",
+        amount: payload.amount,
+        ...(payload.transactionId
+          ? { transactionId: payload.transactionId }
+          : {}),
+      });
+      setLoadError("");
+    } catch {
+      setRegistrations(previous);
+      setLoadError("Could not mark registration as paid. Try again.");
+      throw new Error("Could not mark registration as paid. Try again.");
+    }
+  }
+
   async function handleDelete(id: string) {
     try {
       await deleteRegistration(id);
@@ -113,12 +152,17 @@ export function Dashboard() {
                 Reports & Analytics
               </p>
               <p className="mt-2 max-w-xl text-sm leading-relaxed text-admin-muted">
-                Participants register free for now. In a few weeks they will pay
-                on a payment page using the same email ID. Mark payment status
-                when fees are collected. Amount received so far:{" "}
+                Participants pay ₹950 on registration (UPI). Confirm pending
+                payments, or mark cash collections as paid from a registrant’s
+                details. Received{" "}
                 <span className="font-heading font-semibold text-admin-ink">
                   {formatCurrency(stats.amountReceived)}
                 </span>
+                ; remaining{" "}
+                <span className="font-heading font-semibold text-admin-ink">
+                  {formatCurrency(stats.amountRemaining)}
+                </span>
+                .
               </p>
             </div>
             <ExportMenu
@@ -133,7 +177,7 @@ export function Dashboard() {
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <PieChartCard
               title="Payment Status"
-              description="Paid vs unpaid — fees are collected after registration."
+              description="Paid (confirmed), pending UPI verification, or unpaid."
               data={stats.payments}
             />
             <PieChartCard
@@ -171,6 +215,7 @@ export function Dashboard() {
             onPaymentStatusChange={(id, status) => {
               void handlePaymentStatusChange(id, status);
             }}
+            onMarkPaid={handleMarkPaid}
             onDelete={handleDelete}
           />
         </motion.div>

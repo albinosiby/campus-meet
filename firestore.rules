@@ -13,35 +13,42 @@ service cloud.firestore {
         && request.resource.data.email is string
         && request.resource.data.phone is string
         && request.resource.data.transactionId is string
+        && request.resource.data.transactionId.size() >= 6
         && request.resource.data.amount is number
-        && request.resource.data.paymentStatus == 'unpaid'
+        && request.resource.data.amount > 0
+        && request.resource.data.amount <= 950
+        && request.resource.data.paymentStatus == 'pending'
         && request.resource.data.gender in ['male', 'female']
         && request.resource.data.year in ['1', '2', '3', '4', '5', 'pg']
         && request.resource.data.zone in ['kannur', 'kasargod', 'thalassery', 'kozhikode', 'mananthavady']
         && request.resource.data.dietary in ['none', 'veg', 'nonveg'];
     }
 
-    function isAdminPaymentStatusUpdate() {
+    function isAdminPaymentUpdate() {
       return request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['paymentStatus'])
-        && request.resource.data.paymentStatus in ['paid', 'unpaid', 'pending'];
+            .hasOnly(['paymentStatus', 'amount', 'transactionId'])
+        && request.resource.data.paymentStatus in ['paid', 'unpaid', 'pending']
+        && request.resource.data.amount is number
+        && request.resource.data.amount >= 0
+        && request.resource.data.transactionId is string;
     }
 
     function isPublicPaymentSubmit() {
       return request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['paymentStatus', 'transactionId'])
+            .hasOnly(['paymentStatus', 'transactionId', 'amount'])
         && resource.data.paymentStatus in ['unpaid', 'pending']
         && resource.data.paymentStatus != 'paid'
         && request.resource.data.paymentStatus == 'pending'
         && request.resource.data.transactionId is string
-        && request.resource.data.transactionId.size() >= 6;
+        && request.resource.data.transactionId.size() >= 6
+        && request.resource.data.amount is number
+        && request.resource.data.amount > 0;
     }
 
     match /registrations/{registrationId} {
       allow create: if isValidRegistrationCreate();
       allow read: if true;
-      allow update: if isAdminPaymentStatusUpdate() || isPublicPaymentSubmit();
-      // Admin panel (password-gated in the app) can delete registrations
+      allow update: if isAdminPaymentUpdate() || isPublicPaymentSubmit();
       allow delete: if true;
     }
   }

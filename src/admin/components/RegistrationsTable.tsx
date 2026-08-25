@@ -18,11 +18,15 @@ import {
 import type { PaymentStatus, Registration, Zone } from "@/admin/types";
 import { formatPassId } from "@/shared/passId";
 import { ExportMenu } from "./ExportMenu";
-import { RegistrationDetail } from "./RegistrationDetail";
+import {
+  RegistrationDetail,
+  type ManualPaymentPayload,
+} from "./RegistrationDetail";
 
 interface RegistrationsTableProps {
   registrations: Registration[];
   onPaymentStatusChange: (id: string, status: PaymentStatus) => void;
+  onMarkPaid: (id: string, payload: ManualPaymentPayload) => Promise<void> | void;
   onDelete: (id: string) => Promise<void> | void;
 }
 
@@ -90,6 +94,7 @@ function StaticTh({ children }: { children: ReactNode }) {
 export function RegistrationsTable({
   registrations,
   onPaymentStatusChange,
+  onMarkPaid,
   onDelete,
 }: RegistrationsTableProps) {
   const [query, setQuery] = useState("");
@@ -397,6 +402,7 @@ export function RegistrationsTable({
           registration={selected}
           onClose={() => setSelectedId(null)}
           onPaymentStatusChange={onPaymentStatusChange}
+          onMarkPaid={onMarkPaid}
           onDelete={async (id) => {
             await onDelete(id);
             setSelectedId(null);

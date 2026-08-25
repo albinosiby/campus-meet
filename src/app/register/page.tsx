@@ -12,7 +12,7 @@ import type {
   YearOfStudy,
   Zone,
 } from "@/admin/types";
-import { FeeNotice } from "@/landing/components/FeeNotice";
+import { RegistrationPaymentFields } from "@/landing/components/RegistrationPaymentFields";
 import {
   RegistrationPass,
   type RegistrationPassData,
@@ -70,6 +70,22 @@ export default function RegisterPage() {
     setSubmitting(true);
 
     try {
+      const amountPaid = Number(draft.amountPaid);
+      const transactionId = draft.transactionId.trim();
+
+      if (
+        !Number.isFinite(amountPaid) ||
+        amountPaid < 1 ||
+        amountPaid > EVENT_PAYMENT.amount
+      ) {
+        throw new Error(
+          `Enter a valid amount between 1 and ${EVENT_PAYMENT.amount}.`
+        );
+      }
+      if (transactionId.length < 6) {
+        throw new Error("Transaction ID must be at least 6 characters.");
+      }
+
       const registration = await addRegistration({
         fullName: draft.fullName.trim(),
         email: draft.email.trim(),
@@ -81,9 +97,9 @@ export default function RegisterPage() {
         zone: draft.zone as Zone,
         diocese: draft.diocese.trim(),
         dietary: (draft.dietary || "none") as Dietary,
-        amount: EVENT_PAYMENT.amount,
-        transactionId: "",
-        paymentStatus: "unpaid",
+        amount: amountPaid,
+        transactionId,
+        paymentStatus: "pending",
       });
       clearRegistrationDraft();
       setDraft(EMPTY_REGISTRATION_DRAFT);
@@ -95,9 +111,11 @@ export default function RegisterPage() {
         email: registration.email,
         phone: registration.phone,
       });
-    } catch {
+    } catch (err) {
       setError(
-        "Could not save registration. Check your connection and try again."
+        err instanceof Error
+          ? err.message
+          : "Could not save registration. Check your connection and try again."
       );
     } finally {
       setSubmitting(false);
@@ -268,8 +286,7 @@ export default function RegisterPage() {
                           autoComplete="tel"
                         />
                         <p className="mt-2 text-[11px] leading-relaxed text-cream-muted/50">
-                          For event updates. Payment is matched by email, not
-                          phone.
+                          For event updates and coordination.
                         </p>
                       </div>
                     </div>
@@ -437,9 +454,18 @@ export default function RegisterPage() {
 
                   <fieldset className="space-y-4 pt-4 border-t border-obsidian-border">
                     <legend className="text-xs tracking-[0.2em] uppercase text-gold/60 font-heading mb-4">
-                      Registration Fee
+                      Payment
                     </legend>
-                    <FeeNotice variant="dark" />
+                    <RegistrationPaymentFields
+                      amountPaid={draft.amountPaid}
+                      transactionId={draft.transactionId}
+                      onAmountChange={(value) =>
+                        updateField("amountPaid", value)
+                      }
+                      onTransactionIdChange={(value) =>
+                        updateField("transactionId", value)
+                      }
+                    />
                   </fieldset>
 
                   <div className="pt-6">
@@ -456,7 +482,7 @@ export default function RegisterPage() {
                       disabled={submitting}
                       className="btn-primary w-full justify-center disabled:opacity-60"
                     >
-                      {submitting ? "SUBMITTING…" : "SUBMIT REGISTRATION"}
+                      {submitting ? "SUBMITTING…" : "PAY & REGISTER"}
                       <ArrowRight className="w-4 h-4 btn-arrow" />
                     </button>
                     <p className="text-[11px] text-cream-muted/40 text-center mt-4 leading-relaxed">

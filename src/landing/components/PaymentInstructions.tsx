@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Check, Copy } from "lucide-react";
-import { QRCodeSVG } from "qrcode.react";
 import {
-  buildUpiPaymentLink,
   EVENT_PAYMENT,
   formatRegistrationFee,
   isUpiConfigured,
@@ -13,7 +12,6 @@ import {
 export function PaymentInstructions({ className = "" }: { className?: string }) {
   const [copied, setCopied] = useState(false);
   const configured = isUpiConfigured();
-  const upiLink = configured ? buildUpiPaymentLink() : "";
 
   async function copyUpi() {
     if (!configured) return;
@@ -46,31 +44,21 @@ export function PaymentInstructions({ className = "" }: { className?: string }) 
 
       {!configured ? (
         <p className="mt-5 text-sm leading-relaxed text-cream-muted">
-          UPI details are not configured yet. Set{" "}
-          <code className="text-gold">NEXT_PUBLIC_UPI_ID</code> and rebuild, or
-          check back shortly for payment instructions.
+          UPI details are not configured yet.
         </p>
       ) : (
         <div className="mt-5 grid gap-5 sm:grid-cols-[auto_1fr] sm:items-center">
-          <div className="mx-auto w-fit rounded-sm border border-obsidian-border bg-cream p-2.5">
-            <QRCodeSVG
-              value={upiLink}
-              size={132}
-              level="M"
-              bgColor="#f5f0e8"
-              fgColor="#090a0f"
-              marginSize={0}
+          <div className="mx-auto w-fit rounded-sm border-2 border-gold/50 bg-cream p-3 shadow-[0_0_0_4px_rgba(0,0,0,0.35)] ring-1 ring-gold/20 sm:p-4">
+            <Image
+              src={EVENT_PAYMENT.qrImage}
+              alt="UPI payment QR code"
+              width={240}
+              height={240}
+              className="h-52 w-52 object-contain sm:h-56 sm:w-56"
             />
           </div>
 
           <div className="space-y-3">
-            <div>
-              <p className="text-[10px] font-heading uppercase tracking-[0.18em] text-cream-muted">
-                Pay to
-              </p>
-              <p className="mt-1 text-sm text-cream">{EVENT_PAYMENT.payeeName}</p>
-            </div>
-
             <div>
               <p className="text-[10px] font-heading uppercase tracking-[0.18em] text-cream-muted">
                 UPI ID

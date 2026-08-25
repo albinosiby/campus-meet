@@ -36,22 +36,25 @@ export const EVENT_INFO = {
   ],
 };
 
-/** Payment config. UPI details come from env so you can change them without code edits. */
+/** Payment config. UPI defaults can be overridden with env vars. */
 export const EVENT_PAYMENT = {
   amount: 950,
   currency: "INR",
   currencySymbol: "₹",
-  /** Fee is shown now but not charged at registration time. */
-  collectLater: true,
+  /** Fee is collected during registration via UPI. */
+  collectLater: false,
   collectionNote:
-    "Register free for now. The ₹950 fee will be collected later (in a few weeks) on a payment page. Use the same email ID you register with — that email is how we match your payment to this registration.",
+    "Pay the ₹950 registration fee via UPI using the QR code or UPI ID below, then enter the amount paid and your transaction ID to complete registration.",
   emailMatchNote:
-    "Use an email you can access later. When payment opens, you must enter this same email ID so we can link your payment to this registration.",
-  upiId: process.env.NEXT_PUBLIC_UPI_ID?.trim() || "",
+    "Use an email you can access. Keep your transaction ID ready after paying.",
+  upiId:
+    process.env.NEXT_PUBLIC_UPI_ID?.trim() || "ajinaugestin-1@okhdfcbank",
   payeeName:
     process.env.NEXT_PUBLIC_UPI_PAYEE_NAME?.trim() || "Jesus Youth Malabar",
   upiNote:
     process.env.NEXT_PUBLIC_UPI_NOTE?.trim() || "Malabar Campus Meet 2026",
+  /** Official bank / GPay QR shown on the registration form. */
+  qrImage: "/images/upi-qr.jpg",
 };
 
 export function formatRegistrationFee(): string {
@@ -132,17 +135,17 @@ export const FAQ_ITEMS = [
   {
     question: "What is the registration fee?",
     answer:
-      "The registration fee is ₹950 per participant. You can register free for now — payment will be collected later (in a few weeks) through a payment page.",
+      "The registration fee is ₹950 per participant. Pay via UPI on the registration form using the QR code or UPI ID, then enter your transaction ID.",
   },
   {
     question: "How do I register?",
     answer:
-      'Click the "Register Now" button on this page to fill out the online registration form. Payment is not required at signup. Remember the email you use — you will need the same email when paying later.',
+      'Click "Register Now", fill in your details, pay ₹950 via UPI, and submit the amount paid with your UPI transaction ID to complete registration.',
   },
   {
     question: "How do I make the payment?",
     answer:
-      "No payment is needed while registering. Open the payment page later, enter the same email ID used for registration, pay ₹950 via UPI, and submit your transaction ID. Your email is used to match the payment to your registration.",
+      "On the registration page, scan the UPI QR or pay to ajinaugestin-1@okhdfcbank, then enter the amount you paid and the UPI transaction ID in the form.",
   },
   {
     question: "What should I bring?",
