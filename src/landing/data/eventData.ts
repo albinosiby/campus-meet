@@ -37,6 +37,16 @@ export const EVENT_INFO = {
 };
 
 /** Payment config. UPI defaults can be overridden with env vars. */
+const DEFAULT_UPI_ID = "ajinaugestin-1@okhdfcbank";
+const DEFAULT_PAYEE_NAME = "Jesus Youth Malabar";
+const DEFAULT_UPI_NOTE = "Malabar Campus Meet 2026";
+
+/** Only accept env overrides that look like a real UPI ID (must include @). */
+function resolveUpiId(): string {
+  const fromEnv = process.env.NEXT_PUBLIC_UPI_ID?.trim() ?? "";
+  return fromEnv.includes("@") ? fromEnv : DEFAULT_UPI_ID;
+}
+
 export const EVENT_PAYMENT = {
   amount: 950,
   currency: "INR",
@@ -47,12 +57,10 @@ export const EVENT_PAYMENT = {
     "Pay the ₹950 registration fee via UPI using the QR code or UPI ID below, then enter the amount paid and your transaction ID to complete registration.",
   emailMatchNote:
     "Use an email you can access. Keep your transaction ID ready after paying.",
-  upiId:
-    process.env.NEXT_PUBLIC_UPI_ID?.trim() || "ajinaugestin-1@okhdfcbank",
+  upiId: resolveUpiId(),
   payeeName:
-    process.env.NEXT_PUBLIC_UPI_PAYEE_NAME?.trim() || "Jesus Youth Malabar",
-  upiNote:
-    process.env.NEXT_PUBLIC_UPI_NOTE?.trim() || "Malabar Campus Meet 2026",
+    process.env.NEXT_PUBLIC_UPI_PAYEE_NAME?.trim() || DEFAULT_PAYEE_NAME,
+  upiNote: process.env.NEXT_PUBLIC_UPI_NOTE?.trim() || DEFAULT_UPI_NOTE,
   /** Official bank / GPay QR shown on the registration form. */
   qrImage: "/images/upi-qr.jpg",
 };

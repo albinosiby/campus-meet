@@ -30,11 +30,11 @@ services:
       - key: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
         sync: false
       - key: NEXT_PUBLIC_UPI_ID
-        sync: false
+        value: ajinaugestin-1@okhdfcbank
       - key: NEXT_PUBLIC_UPI_PAYEE_NAME
-        sync: false
+        value: Jesus Youth Malabar
       - key: NEXT_PUBLIC_UPI_NOTE
-        sync: false
+        value: Malabar Campus Meet 2026
 
   - type: web
     name: campus-meet-admin
