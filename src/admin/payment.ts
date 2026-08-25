@@ -20,30 +20,36 @@ export function normalizePayments(
   fallback?: { amount: number; transactionId: string; paidAt: string }
 ): PaymentRecord[] {
   if (Array.isArray(payments) && payments.length > 0) {
-    return payments.map((entry) => {
-      const row = entry as Partial<PaymentRecord>;
-      return {
-        amount: Number(row.amount ?? 0),
-        transactionId: String(row.transactionId ?? "").trim(),
-        paidAt:
-          typeof row.paidAt === "string" && row.paidAt
-            ? row.paidAt
-            : new Date().toISOString(),
-        source:
-          row.source === "register" ||
-          row.source === "payment" ||
-          row.source === "admin"
-            ? row.source
-            : undefined,
-      };
-    });
+    return payments
+      .map((entry) => {
+        const row = entry as Partial<PaymentRecord>;
+        return {
+          amount: Number(row.amount ?? 0),
+          transactionId: String(row.transactionId ?? "").trim(),
+          paidAt:
+            typeof row.paidAt === "string" && row.paidAt
+              ? row.paidAt
+              : new Date().toISOString(),
+          source:
+            row.source === "register" ||
+            row.source === "payment" ||
+            row.source === "admin"
+              ? row.source
+              : undefined,
+        };
+      })
+      .filter((payment) => payment.amount > 0 && payment.transactionId.length >= 8);
   }
 
-  if (fallback && fallback.amount > 0) {
+  if (
+    fallback &&
+    fallback.amount > 0 &&
+    fallback.transactionId.trim().length >= 8
+  ) {
     return [
       {
         amount: fallback.amount,
-        transactionId: fallback.transactionId,
+        transactionId: fallback.transactionId.trim(),
         paidAt: fallback.paidAt,
         source: "register",
       },

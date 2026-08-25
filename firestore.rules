@@ -71,10 +71,18 @@ service cloud.firestore {
         : 0;
     }
 
+    function hasLegacyNoPaymentProof() {
+      return previousPaymentsSize() == 0
+        && (
+          !(resource.data.transactionId is string)
+          || resource.data.transactionId.size() < 8
+        );
+    }
+
     function isPublicPaymentSubmit() {
       return request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['paymentStatus', 'transactionId', 'amount', 'payments'])
-        && resource.data.paymentStatus != 'paid'
+        && (resource.data.paymentStatus != 'paid' || hasLegacyNoPaymentProof())
         && request.resource.data.paymentStatus == 'pending'
         && request.resource.data.transactionId is string
         && request.resource.data.transactionId.size() >= 8
@@ -83,17 +91,24 @@ service cloud.firestore {
         && request.resource.data.amount <= 950
         && request.resource.data.payments is list
         && (
-          request.resource.data.payments.size() == previousPaymentsSize() + 1
-          || (
-            previousPaymentsSize() == 0
-            && resource.data.amount is number
-            && resource.data.amount > 0
-            && request.resource.data.payments.size() == 2
-          )
+            request.resource.data.payments.size() == previousPaymentsSize() + 1
+            || (
+              previousPaymentsSize() == 0
+              && resource.data.amount is number
+              && resource.data.amount > 0
+              && !hasLegacyNoPaymentProof()
+              && request.resource.data.payments.size() == 2
+            )
         )
         && isValidPaymentEntry(latestPayment())
         && request.resource.data.transactionId == latestPayment().transactionId
-        && request.resource.data.amount == resource.data.amount + latestPayment().amount;
+        && (
+          request.resource.data.amount == resource.data.amount + latestPayment().amount
+          || (
+            hasLegacyNoPaymentProof()
+            && request.resource.data.amount == latestPayment().amount
+          )
+        );
     }
 
     match /registrations/{registrationId} {

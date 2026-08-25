@@ -50,7 +50,14 @@ function mapRegistration(
     transactionId,
     paidAt: createdAt,
   });
-  const totalPaid = payments.length > 0 ? sumPayments(payments) : amount;
+  const totalPaid = payments.length > 0 ? sumPayments(payments) : 0;
+  const storedStatus = (data.paymentStatus as PaymentStatus) ?? "unpaid";
+  const paymentStatus: PaymentStatus =
+    totalPaid <= 0
+      ? "unpaid"
+      : storedStatus === "paid" && isFullyPaid(totalPaid)
+        ? "paid"
+        : "pending";
 
   return {
     id: snapshot.id,
@@ -67,7 +74,7 @@ function mapRegistration(
     amount: totalPaid,
     transactionId:
       payments[payments.length - 1]?.transactionId || transactionId,
-    paymentStatus: (data.paymentStatus as PaymentStatus) ?? "unpaid",
+    paymentStatus,
     payments,
     createdAt,
   };
