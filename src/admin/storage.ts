@@ -147,6 +147,13 @@ export async function addRegistration(
   input: RegistrationInput
 ): Promise<Registration> {
   const createdAt = new Date().toISOString();
+  const email = normalizeEmail(input.email);
+  const existing = await findRegistrationByEmail(email);
+  if (existing) {
+    throw new Error(
+      "This email is already registered. Please use the payment page to pay any remaining amount."
+    );
+  }
   const payments =
     input.payments?.length > 0
       ? input.payments
@@ -163,7 +170,7 @@ export async function addRegistration(
   const amount = sumPayments(payments);
   const payload = {
     ...input,
-    email: normalizeEmail(input.email),
+    email,
     amount,
     transactionId: payments[payments.length - 1]?.transactionId ?? "",
     payments,

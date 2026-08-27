@@ -34,6 +34,7 @@ const selectClass = `${fieldClass} appearance-none`;
 
 export default function RegisterPage() {
   const ref = useRef(null);
+  const submittingRef = useRef(false);
   const isInView = useInView(ref, { once: true });
   const [submitting, setSubmitting] = useState(false);
   const [pass, setPass] = useState<RegistrationPassData | null>(null);
@@ -66,6 +67,9 @@ export default function RegisterPage() {
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (submittingRef.current) return;
+
+    submittingRef.current = true;
     setError("");
     setSubmitting(true);
 
@@ -127,6 +131,7 @@ export default function RegisterPage() {
           : "Could not save registration. Check your connection and try again."
       );
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   }
