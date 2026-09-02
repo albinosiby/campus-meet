@@ -11,6 +11,7 @@ export interface RegistrationDraft {
   dietary: string;
   amountPaid: string;
   transactionId: string;
+  paymentMethod: "upi" | "cash";
 }
 
 export const EMPTY_REGISTRATION_DRAFT: RegistrationDraft = {
@@ -26,9 +27,10 @@ export const EMPTY_REGISTRATION_DRAFT: RegistrationDraft = {
   dietary: "none",
   amountPaid: "",
   transactionId: "",
+  paymentMethod: "upi",
 };
 
-const DRAFT_STORAGE_KEY = "malabar-campus-meet-registration-draft-v3";
+const DRAFT_STORAGE_KEY = "malabar-campus-meet-registration-draft-v4";
 
 export function loadRegistrationDraft(): RegistrationDraft {
   if (typeof window === "undefined") return EMPTY_REGISTRATION_DRAFT;

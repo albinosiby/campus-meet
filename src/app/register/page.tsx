@@ -9,9 +9,11 @@ import { addRegistration } from "@/admin/storage";
 import type {
   Dietary,
   Gender,
+  PaymentMethod,
   YearOfStudy,
   Zone,
 } from "@/admin/types";
+import { cashTransactionId } from "@/admin/payment";
 import { RegistrationPaymentFields } from "@/landing/components/RegistrationPaymentFields";
 import {
   RegistrationPass,
@@ -75,7 +77,12 @@ export default function RegisterPage() {
 
     try {
       const amountPaid = Number(draft.amountPaid);
-      const transactionId = draft.transactionId.trim();
+      const paymentMethod: PaymentMethod =
+        draft.paymentMethod === "cash" ? "cash" : "upi";
+      const transactionId =
+        paymentMethod === "cash"
+          ? cashTransactionId()
+          : draft.transactionId.trim();
 
       if (
         !Number.isFinite(amountPaid) ||
@@ -86,7 +93,7 @@ export default function RegisterPage() {
           `Enter a valid amount between 1 and ${EVENT_PAYMENT.amount}.`
         );
       }
-      if (transactionId.length < 8) {
+      if (paymentMethod === "upi" && transactionId.length < 8) {
         throw new Error("Transaction ID must be at least 8 characters.");
       }
 
@@ -111,6 +118,7 @@ export default function RegisterPage() {
             transactionId,
             paidAt,
             source: "register",
+            method: paymentMethod,
           },
         ],
       });
@@ -471,8 +479,14 @@ export default function RegisterPage() {
                       Payment
                     </legend>
                     <RegistrationPaymentFields
+                      paymentMethod={
+                        draft.paymentMethod === "cash" ? "cash" : "upi"
+                      }
                       amountPaid={draft.amountPaid}
                       transactionId={draft.transactionId}
+                      onPaymentMethodChange={(value) =>
+                        updateField("paymentMethod", value)
+                      }
                       onAmountChange={(value) =>
                         updateField("amountPaid", value)
                       }

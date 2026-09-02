@@ -1,7 +1,18 @@
 import { EVENT_PAYMENT } from "@/landing/data/eventData";
-import type { PaymentRecord, PaymentStatus, Registration } from "./types";
+import type {
+  PaymentMethod,
+  PaymentRecord,
+  PaymentStatus,
+  Registration,
+} from "./types";
 
 export const REGISTRATION_FEE = EVENT_PAYMENT.amount;
+
+function inferPaymentMethod(row: Partial<PaymentRecord>): PaymentMethod | undefined {
+  if (row.method === "cash" || row.method === "upi") return row.method;
+  if (String(row.transactionId ?? "").startsWith("CASH-")) return "cash";
+  return undefined;
+}
 
 export function sumPayments(payments: PaymentRecord[]): number {
   return payments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
@@ -36,6 +47,7 @@ export function normalizePayments(
             row.source === "admin"
               ? row.source
               : undefined,
+          method: inferPaymentMethod(row),
         };
       })
       .filter((payment) => payment.amount > 0 && payment.transactionId.length >= 8);
@@ -52,6 +64,9 @@ export function normalizePayments(
         transactionId: fallback.transactionId.trim(),
         paidAt: fallback.paidAt,
         source: "register",
+        method: fallback.transactionId.trim().startsWith("CASH-")
+          ? "cash"
+          : "upi",
       },
     ];
   }
@@ -63,14 +78,31 @@ export function createPaymentRecord(input: {
   amount: number;
   transactionId: string;
   source: PaymentRecord["source"];
+  method?: PaymentMethod;
   paidAt?: string;
 }): PaymentRecord {
+  const method =
+    input.method ??
+    (input.transactionId.trim().startsWith("CASH-") ? "cash" : "upi");
   return {
     amount: input.amount,
     transactionId: input.transactionId.trim(),
     paidAt: input.paidAt ?? new Date().toISOString(),
     source: input.source,
+    method,
   };
+}
+
+export function cashTransactionId(): string {
+  return `CASH-${Date.now()}`;
+}
+
+export function isCashPayment(payment: PaymentRecord): boolean {
+  return payment.method === "cash" || payment.transactionId.startsWith("CASH-");
+}
+
+export function paymentMethodLabel(payment: PaymentRecord): string {
+  return isCashPayment(payment) ? "Cash" : "UPI";
 }
 
 /** UI label for payment progress (incomplete / awaiting verify / verified). */

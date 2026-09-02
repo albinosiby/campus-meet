@@ -54,9 +54,9 @@ export const EVENT_PAYMENT = {
   /** Fee is collected during registration via UPI. */
   collectLater: false,
   collectionNote:
-    "Pay the ₹950 registration fee via UPI using the QR code or UPI ID below, then enter the amount paid and your transaction ID to complete registration.",
+    "Pay ₹950 by UPI or cash. For UPI, scan the QR / use the UPI ID and enter your transaction ID. For cash, enter the amount only — no transaction ID needed.",
   emailMatchNote:
-    "Use an email you can access. Keep your transaction ID ready after paying.",
+    "Use an email you can access. For UPI, keep your transaction ID ready after paying.",
   upiId: resolveUpiId(),
   payeeName:
     process.env.NEXT_PUBLIC_UPI_PAYEE_NAME?.trim() || DEFAULT_PAYEE_NAME,
@@ -143,17 +143,17 @@ export const FAQ_ITEMS = [
   {
     question: "What is the registration fee?",
     answer:
-      "The registration fee is ₹950 per participant. Pay via UPI on the registration form using the QR code or UPI ID, then enter your transaction ID.",
+      "The registration fee is ₹950 per participant. Pay by UPI or cash on the registration form.",
   },
   {
     question: "How do I register?",
     answer:
-      'Click "Register Now", fill in your details, pay ₹950 via UPI, and submit the amount paid with your UPI transaction ID to complete registration.',
+      'Click "Register Now", fill in your details, choose UPI or cash, enter the amount paid, and (for UPI) your transaction ID.',
   },
   {
     question: "How do I make the payment?",
     answer:
-      "On the registration page, scan the UPI QR or pay to ajinaugestin-1@okhdfcbank, then enter the amount you paid and the UPI transaction ID in the form.",
+      "Choose UPI or cash on the registration page. For UPI, scan the QR or pay to ajinaugestin-1@okhdfcbank and enter the transaction ID. For cash, enter the amount only.",
   },
   {
     question: "What should I bring?",

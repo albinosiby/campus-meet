@@ -2,25 +2,26 @@
 
 import { FormEvent, useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
-import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Banknote, CheckCircle2, Smartphone } from "lucide-react";
 import Link from "next/link";
 import {
   appendRegistrationPayment,
   findRegistrationByEmail,
   normalizeEmail,
 } from "@/admin/storage";
-import type { Registration } from "@/admin/types";
+import type { PaymentMethod, Registration } from "@/admin/types";
 import {
   amountRemaining,
   formatPaidAt,
+  isCashPayment,
   isFullyPaid,
+  paymentMethodLabel,
   REGISTRATION_FEE,
 } from "@/admin/payment";
 import { formatCurrency } from "@/admin/analytics";
 import { PaymentInstructions } from "@/landing/components/PaymentInstructions";
 import {
   EVENT_INFO,
-  EVENT_PAYMENT,
   formatRegistrationFee,
 } from "@/landing/data/eventData";
 import { EventWordmark } from "@/shared/components/EventWordmark";
@@ -38,6 +39,7 @@ export default function PaymentPage() {
   const [email, setEmail] = useState("");
   const [payAmount, setPayAmount] = useState("");
   const [transactionId, setTransactionId] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("upi");
   const [registration, setRegistration] = useState<Registration | null>(null);
   const [lookingUp, setLookingUp] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -84,14 +86,14 @@ export default function PaymentPage() {
     if (!registration) return;
 
     const amount = Number(payAmount);
-    const txn = transactionId.trim();
     const remaining = amountRemaining(registration.amount);
+    const txn = paymentMethod === "cash" ? "" : transactionId.trim();
 
     if (!Number.isFinite(amount) || amount < 1 || amount > remaining) {
       setError(`Enter an amount between 1 and ${remaining}.`);
       return;
     }
-    if (txn.length < 8) {
+    if (paymentMethod === "upi" && txn.length < 8) {
       setError("Enter a valid transaction ID (at least 8 characters).");
       return;
     }
@@ -103,7 +105,8 @@ export default function PaymentPage() {
       const updated = await appendRegistrationPayment(
         registration.id,
         amount,
-        txn
+        txn,
+        paymentMethod
       );
       setRegistration(updated);
       setTransactionId("");
@@ -129,6 +132,7 @@ export default function PaymentPage() {
     setRegistration(null);
     setTransactionId("");
     setPayAmount("");
+    setPaymentMethod("upi");
     setError("");
     setJustPaidFully(false);
   }
@@ -284,9 +288,51 @@ export default function PaymentPage() {
 
               {remaining > 0 ? (
                 <>
-                  <PaymentInstructions />
+                  <div className="rounded-sm border border-obsidian-border bg-obsidian-card p-5">
+                    <p className="text-[10px] font-heading uppercase tracking-[0.18em] text-cream-muted">
+                      How are you paying?
+                    </p>
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod("upi")}
+                        className={`inline-flex items-center justify-center gap-2 rounded-sm border px-3 py-2.5 text-xs font-heading uppercase tracking-[0.12em] transition-colors ${
+                          paymentMethod === "upi"
+                            ? "border-gold/50 bg-gold/15 text-gold"
+                            : "border-obsidian-border text-cream-muted hover:border-gold/30 hover:text-cream"
+                        }`}
+                      >
+                        <Smartphone className="h-3.5 w-3.5" />
+                        UPI
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod("cash")}
+                        className={`inline-flex items-center justify-center gap-2 rounded-sm border px-3 py-2.5 text-xs font-heading uppercase tracking-[0.12em] transition-colors ${
+                          paymentMethod === "cash"
+                            ? "border-gold/50 bg-gold/15 text-gold"
+                            : "border-obsidian-border text-cream-muted hover:border-gold/30 hover:text-cream"
+                        }`}
+                      >
+                        <Banknote className="h-3.5 w-3.5" />
+                        Cash
+                      </button>
+                    </div>
+                    {paymentMethod === "cash" ? (
+                      <p className="mt-4 text-[11px] leading-relaxed text-cream-muted/70">
+                        Paying in cash / liquid money. Enter the amount given to
+                        the committee — no transaction ID needed.
+                      </p>
+                    ) : null}
+                  </div>
 
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {paymentMethod === "upi" ? <PaymentInstructions /> : null}
+
+                  <div
+                    className={`grid grid-cols-1 gap-4 ${
+                      paymentMethod === "upi" ? "md:grid-cols-2" : ""
+                    }`}
+                  >
                     <div>
                       <label
                         htmlFor="payAmount"
@@ -311,25 +357,27 @@ export default function PaymentPage() {
                         Remaining due: {formatCurrency(remaining)}
                       </p>
                     </div>
-                    <div>
-                      <label
-                        htmlFor="transactionId"
-                        className="mb-2 block font-heading text-xs text-cream-muted"
-                      >
-                        UPI Transaction ID *
-                      </label>
-                      <input
-                        type="text"
-                        id="transactionId"
-                        name="transactionId"
-                        required
-                        minLength={8}
-                        value={transactionId}
-                        onChange={(e) => setTransactionId(e.target.value)}
-                        className={fieldClass}
-                        placeholder="Enter UPI reference / transaction ID"
-                      />
-                    </div>
+                    {paymentMethod === "upi" ? (
+                      <div>
+                        <label
+                          htmlFor="transactionId"
+                          className="mb-2 block font-heading text-xs text-cream-muted"
+                        >
+                          UPI Transaction ID *
+                        </label>
+                        <input
+                          type="text"
+                          id="transactionId"
+                          name="transactionId"
+                          required
+                          minLength={8}
+                          value={transactionId}
+                          onChange={(e) => setTransactionId(e.target.value)}
+                          className={fieldClass}
+                          placeholder="Enter UPI reference / transaction ID"
+                        />
+                      </div>
+                    ) : null}
                   </div>
 
                   {error ? (
@@ -345,8 +393,9 @@ export default function PaymentPage() {
                     type="submit"
                     disabled={
                       submitting ||
-                      transactionId.trim().length < 8 ||
-                      !payAmount
+                      !payAmount ||
+                      (paymentMethod === "upi" &&
+                        transactionId.trim().length < 8)
                     }
                     className="btn-primary w-full justify-center disabled:opacity-60"
                   >
@@ -426,9 +475,14 @@ function PaymentSummary({ registration }: { registration: Registration }) {
                     {formatPaidAt(payment.paidAt)}
                   </span>
                 </div>
-                <p className="mt-1 break-all font-mono text-[11px] text-gold">
-                  {payment.transactionId}
+                <p className="mt-1 text-[11px] font-heading uppercase tracking-[0.12em] text-gold">
+                  {paymentMethodLabel(payment)}
                 </p>
+                {!isCashPayment(payment) ? (
+                  <p className="mt-1 break-all font-mono text-[11px] text-cream-muted">
+                    Txn · {payment.transactionId}
+                  </p>
+                ) : null}
               </li>
             ))}
           </ul>

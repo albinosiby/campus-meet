@@ -9,12 +9,15 @@ export type YearOfStudy = "1" | "2" | "3" | "4" | "5" | "pg";
 export type Dietary = "none" | "veg" | "nonveg";
 export type PaymentStatus = "paid" | "unpaid" | "pending";
 
+export type PaymentMethod = "upi" | "cash";
+
 export interface PaymentRecord {
   amount: number;
   transactionId: string;
   /** ISO timestamp when this installment was recorded. */
   paidAt: string;
   source?: "register" | "payment" | "admin";
+  method?: PaymentMethod;
 }
 
 export interface Registration {

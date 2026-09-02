@@ -14,7 +14,9 @@ import { formatCurrency } from "@/admin/analytics";
 import {
   amountRemaining,
   formatPaidAt,
+  isCashPayment,
   isFullyPaid,
+  paymentMethodLabel,
   paymentProgressLabel,
   REGISTRATION_FEE,
 } from "@/admin/payment";
@@ -224,12 +226,12 @@ export function RegistrationDetailPage() {
                         {formatPaidAt(payment.paidAt)}
                       </span>
                     </div>
-                    <p className="mt-1 break-all font-mono text-xs text-gold-dim">
-                      Txn · {payment.transactionId}
+                    <p className="mt-1 text-[11px] font-heading uppercase tracking-[0.14em] text-gold-dim">
+                      {paymentMethodLabel(payment)}
                     </p>
-                    {payment.source ? (
-                      <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-admin-muted">
-                        via {payment.source}
+                    {!isCashPayment(payment) ? (
+                      <p className="mt-1 break-all font-mono text-xs text-admin-muted">
+                        Txn · {payment.transactionId}
                       </p>
                     ) : null}
                   </li>

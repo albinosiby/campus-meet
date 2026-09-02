@@ -20,6 +20,7 @@ import {
 } from "@/shared/firebase/client";
 import {
   amountRemaining,
+  cashTransactionId,
   createPaymentRecord,
   derivePaymentStatus,
   isFullyPaid,
@@ -27,6 +28,7 @@ import {
   sumPayments,
 } from "./payment";
 import type {
+  PaymentMethod,
   PaymentRecord,
   PaymentStatus,
   Registration,
@@ -245,10 +247,12 @@ export async function updatePayment(
 export async function appendRegistrationPayment(
   id: string,
   amount: number,
-  transactionId: string
+  transactionId: string,
+  method: PaymentMethod = "upi"
 ): Promise<Registration> {
-  const txn = transactionId.trim();
-  if (txn.length < 8) {
+  const isCash = method === "cash";
+  const txn = isCash ? cashTransactionId() : transactionId.trim();
+  if (!isCash && txn.length < 8) {
     throw new Error("Transaction ID must be at least 8 characters.");
   }
   if (!Number.isFinite(amount) || amount < 1) {
@@ -277,6 +281,7 @@ export async function appendRegistrationPayment(
     amount,
     transactionId: txn,
     source: "payment",
+    method: isCash ? "cash" : "upi",
   });
   const payments = [...current.payments, nextPayment];
   const totalPaid = sumPayments(payments);
@@ -334,15 +339,13 @@ export async function appendAdminPayment(
   }
   const payAmount = Math.min(amount, remaining);
   const txn = (transactionId ?? "").trim();
+  const isCash = txn.length < 8;
   const nextPayment = createPaymentRecord({
     amount: payAmount,
-    transactionId: txn.length >= 8 ? txn : `CASH-${Date.now()}`,
+    transactionId: isCash ? `CASH-${Date.now()}` : txn,
     source: "admin",
+    method: isCash ? "cash" : "upi",
   });
-  // Firestore create rule requires txn >= 8; admin cash uses CASH- prefix.
-  if (nextPayment.transactionId.length < 8) {
-    nextPayment.transactionId = `CASH-${Date.now()}`;
-  }
 
   const payments = [...current.payments, nextPayment];
   const totalPaid = sumPayments(payments);

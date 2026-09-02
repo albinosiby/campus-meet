@@ -2,16 +2,19 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Check, Copy } from "lucide-react";
+import { Banknote, Check, Copy, Smartphone } from "lucide-react";
 import {
   EVENT_PAYMENT,
   formatRegistrationFee,
   isUpiConfigured,
 } from "@/landing/data/eventData";
+import type { PaymentMethod } from "@/admin/types";
 
 interface RegistrationPaymentFieldsProps {
+  paymentMethod: PaymentMethod;
   amountPaid: string;
   transactionId: string;
+  onPaymentMethodChange: (value: PaymentMethod) => void;
   onAmountChange: (value: string) => void;
   onTransactionIdChange: (value: string) => void;
 }
@@ -20,13 +23,16 @@ const fieldClass =
   "w-full bg-obsidian-card border border-obsidian-border text-cream text-sm px-4 py-3 rounded-sm focus:border-gold/40 focus:outline-none transition-colors placeholder:text-cream-muted/40 font-body";
 
 export function RegistrationPaymentFields({
+  paymentMethod,
   amountPaid,
   transactionId,
+  onPaymentMethodChange,
   onAmountChange,
   onTransactionIdChange,
 }: RegistrationPaymentFieldsProps) {
   const [copied, setCopied] = useState(false);
   const configured = isUpiConfigured();
+  const isUpi = paymentMethod === "upi";
 
   async function copyUpi() {
     if (!configured) return;
@@ -59,7 +65,37 @@ export function RegistrationPaymentFields({
           {EVENT_PAYMENT.collectionNote}
         </p>
 
-        {configured ? (
+        <p className="mt-5 text-[10px] font-heading uppercase tracking-[0.18em] text-cream-muted">
+          How are you paying?
+        </p>
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => onPaymentMethodChange("upi")}
+            className={`inline-flex items-center justify-center gap-2 rounded-sm border px-3 py-2.5 text-xs font-heading uppercase tracking-[0.12em] transition-colors ${
+              isUpi
+                ? "border-gold/50 bg-gold/15 text-gold"
+                : "border-obsidian-border text-cream-muted hover:border-gold/30 hover:text-cream"
+            }`}
+          >
+            <Smartphone className="h-3.5 w-3.5" />
+            UPI
+          </button>
+          <button
+            type="button"
+            onClick={() => onPaymentMethodChange("cash")}
+            className={`inline-flex items-center justify-center gap-2 rounded-sm border px-3 py-2.5 text-xs font-heading uppercase tracking-[0.12em] transition-colors ${
+              !isUpi
+                ? "border-gold/50 bg-gold/15 text-gold"
+                : "border-obsidian-border text-cream-muted hover:border-gold/30 hover:text-cream"
+            }`}
+          >
+            <Banknote className="h-3.5 w-3.5" />
+            Cash
+          </button>
+        </div>
+
+        {isUpi && configured ? (
           <div className="mt-6 grid gap-6 sm:grid-cols-[auto_1fr] sm:items-center">
             <div className="mx-auto w-fit rounded-sm border-2 border-gold/50 bg-cream p-3 shadow-[0_0_0_4px_rgba(0,0,0,0.35)] ring-1 ring-gold/20 sm:p-4">
               <Image
@@ -101,9 +137,18 @@ export function RegistrationPaymentFields({
             </div>
           </div>
         ) : null}
+
+        {!isUpi ? (
+          <p className="mt-4 text-[11px] leading-relaxed text-cream-muted/70">
+            Paying in cash / liquid money. Enter the amount given to the
+            committee — no transaction ID needed.
+          </p>
+        ) : null}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div
+        className={`grid grid-cols-1 gap-4 ${isUpi ? "md:grid-cols-2" : ""}`}
+      >
         <div>
           <label
             htmlFor="amountPaid"
@@ -125,29 +170,31 @@ export function RegistrationPaymentFields({
             placeholder="Enter amount paid"
           />
         </div>
-        <div>
-          <label
-            htmlFor="transactionId"
-            className="mb-2 block text-xs font-heading text-cream-muted"
-          >
-            UPI Transaction ID *
-          </label>
-          <input
-            type="text"
-            id="transactionId"
-            name="transactionId"
-            required
-            minLength={8}
-            value={transactionId}
-            onChange={(e) => onTransactionIdChange(e.target.value)}
-            className={fieldClass}
-            placeholder="Enter UPI reference / transaction ID"
-            autoComplete="off"
-          />
-          <p className="mt-2 text-[11px] leading-relaxed text-cream-muted/50">
-            Find this in your UPI app after paying.
-          </p>
-        </div>
+        {isUpi ? (
+          <div>
+            <label
+              htmlFor="transactionId"
+              className="mb-2 block text-xs font-heading text-cream-muted"
+            >
+              UPI Transaction ID *
+            </label>
+            <input
+              type="text"
+              id="transactionId"
+              name="transactionId"
+              required
+              minLength={8}
+              value={transactionId}
+              onChange={(e) => onTransactionIdChange(e.target.value)}
+              className={fieldClass}
+              placeholder="Enter UPI reference / transaction ID"
+              autoComplete="off"
+            />
+            <p className="mt-2 text-[11px] leading-relaxed text-cream-muted/50">
+              Find this in your UPI app after paying.
+            </p>
+          </div>
+        ) : null}
       </div>
     </div>
   );
