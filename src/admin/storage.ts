@@ -26,6 +26,7 @@ import {
   isFullyPaid,
   normalizePayments,
   sumPayments,
+  upiTransactionIdError,
 } from "./payment";
 import type {
   PaymentMethod,
@@ -34,6 +35,11 @@ import type {
   Registration,
   RegistrationInput,
 } from "./types";
+
+function assertValidUpiTransactionId(transactionId: string) {
+  const error = upiTransactionIdError(transactionId);
+  if (error) throw new Error(error);
+}
 
 function mapRegistration(
   snapshot: QueryDocumentSnapshot<DocumentData> | { id: string; data: () => DocumentData }
@@ -169,6 +175,10 @@ export async function addRegistration(
             }),
           ]
         : [];
+  const latestTxn = payments[payments.length - 1]?.transactionId ?? "";
+  if (latestTxn && !latestTxn.startsWith("CASH-")) {
+    assertValidUpiTransactionId(latestTxn);
+  }
   const amount = sumPayments(payments);
   const payload = {
     ...input,
@@ -252,8 +262,8 @@ export async function appendRegistrationPayment(
 ): Promise<Registration> {
   const isCash = method === "cash";
   const txn = isCash ? cashTransactionId() : transactionId.trim();
-  if (!isCash && txn.length < 8) {
-    throw new Error("Transaction ID must be at least 8 characters.");
+  if (!isCash) {
+    assertValidUpiTransactionId(txn);
   }
   if (!Number.isFinite(amount) || amount < 1) {
     throw new Error("Enter a valid payment amount.");

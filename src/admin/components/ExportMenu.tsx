@@ -24,7 +24,7 @@ const OPTIONS = [
   {
     id: "excel" as const,
     label: "Download Excel",
-    hint: "Spreadsheet (.xlsx)",
+    hint: "Spreadsheet (.xlsx) — all installment IDs",
     icon: FileSpreadsheet,
   },
   {

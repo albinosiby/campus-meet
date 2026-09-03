@@ -9,6 +9,13 @@ import {
   isUpiConfigured,
 } from "@/landing/data/eventData";
 import type { PaymentMethod } from "@/admin/types";
+import {
+  looksLikeUpiId,
+  sanitizeUpiTransactionIdInput,
+  UPI_TRANSACTION_ID_MAX_LENGTH,
+  UPI_TRANSACTION_ID_MIN_LENGTH,
+  upiTransactionIdError,
+} from "@/admin/payment";
 
 interface RegistrationPaymentFieldsProps {
   paymentMethod: PaymentMethod;
@@ -31,8 +38,30 @@ export function RegistrationPaymentFields({
   onTransactionIdChange,
 }: RegistrationPaymentFieldsProps) {
   const [copied, setCopied] = useState(false);
+  const [txnHint, setTxnHint] = useState("");
   const configured = isUpiConfigured();
   const isUpi = paymentMethod === "upi";
+
+  function handleTransactionIdChange(raw: string) {
+    if (looksLikeUpiId(raw)) {
+      setTxnHint(
+        "That is a UPI ID. Enter the transaction / UTR number from your UPI app after paying — not the UPI ID."
+      );
+      onTransactionIdChange("");
+      return;
+    }
+    const next = sanitizeUpiTransactionIdInput(raw);
+    onTransactionIdChange(next);
+    setTxnHint("");
+  }
+
+  function handleTransactionIdBlur() {
+    if (!transactionId) {
+      setTxnHint("");
+      return;
+    }
+    setTxnHint(upiTransactionIdError(transactionId) ?? "");
+  }
 
   async function copyUpi() {
     if (!configured) return;
@@ -131,8 +160,8 @@ export function RegistrationPaymentFields({
                 </div>
               </div>
               <p className="text-[11px] leading-relaxed text-cream-muted/70">
-                Scan this QR with any UPI app, then enter the amount and
-                transaction ID below.
+              Scan this QR with any UPI app, then enter the amount and
+              UPI Ref / UTR (transaction ID) below — not the UPI ID.
               </p>
             </div>
           </div>
@@ -183,15 +212,31 @@ export function RegistrationPaymentFields({
               id="transactionId"
               name="transactionId"
               required
-              minLength={8}
-              value={transactionId}
-              onChange={(e) => onTransactionIdChange(e.target.value)}
-              className={fieldClass}
-              placeholder="Enter UPI reference / transaction ID"
+              minLength={UPI_TRANSACTION_ID_MIN_LENGTH}
+              maxLength={UPI_TRANSACTION_ID_MAX_LENGTH}
+              inputMode="text"
               autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
+              pattern="[A-Za-z0-9]{12,35}"
+              title="Enter the UPI Ref / UTR number (usually 12 digits), not the UPI ID"
+              value={transactionId}
+              onChange={(e) => handleTransactionIdChange(e.target.value)}
+              onBlur={handleTransactionIdBlur}
+              className={fieldClass}
+              placeholder="e.g. 123456789012"
+              aria-invalid={txnHint ? true : undefined}
+              aria-describedby="transactionId-hint"
             />
-            <p className="mt-2 text-[11px] leading-relaxed text-cream-muted/50">
-              Find this in your UPI app after paying.
+            <p
+              id="transactionId-hint"
+              className={`mt-2 text-[11px] leading-relaxed ${
+                txnHint ? "text-red-400/90" : "text-cream-muted/50"
+              }`}
+              role={txnHint ? "alert" : undefined}
+            >
+              {txnHint ||
+                "Copy the UPI Ref / UTR number from your app after paying — not the UPI ID (name@bank)."}
             </p>
           </div>
         ) : null}

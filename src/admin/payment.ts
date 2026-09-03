@@ -97,6 +97,49 @@ export function cashTransactionId(): string {
   return `CASH-${Date.now()}`;
 }
 
+/** NPCI UTR / UPI Ref is typically 12 digits; some apps show a slightly longer id. */
+export const UPI_TRANSACTION_ID_MIN_LENGTH = 12;
+export const UPI_TRANSACTION_ID_MAX_LENGTH = 35;
+
+const UPI_TRANSACTION_ID_PATTERN = /^[A-Za-z0-9]{12,35}$/;
+
+export function looksLikeUpiId(value: string): boolean {
+  return /@/.test(value) || /upi\s*id/i.test(value);
+}
+
+/** Keep letters and digits only so a pasted UPI ID (name@bank) cannot be submitted. */
+export function sanitizeUpiTransactionIdInput(raw: string): string {
+  return raw.replace(/[^A-Za-z0-9]/g, "").slice(0, UPI_TRANSACTION_ID_MAX_LENGTH);
+}
+
+export function isValidUpiTransactionId(value: string): boolean {
+  const txn = value.trim();
+  if (looksLikeUpiId(txn)) return false;
+  if (!UPI_TRANSACTION_ID_PATTERN.test(txn)) return false;
+  return /\d{8,}/.test(txn);
+}
+
+export function upiTransactionIdError(value: string): string | null {
+  const txn = value.trim();
+  if (!txn) return "Enter the UPI transaction ID from your payment.";
+  if (looksLikeUpiId(txn)) {
+    return "That is a UPI ID. Enter the transaction / UTR number from your UPI app after paying — not the UPI ID.";
+  }
+  if (/[^A-Za-z0-9]/.test(txn)) {
+    return "Transaction ID can only contain letters and numbers.";
+  }
+  if (txn.length < UPI_TRANSACTION_ID_MIN_LENGTH) {
+    return "Enter the full UPI Ref / UTR number (usually 12 digits).";
+  }
+  if (txn.length > UPI_TRANSACTION_ID_MAX_LENGTH) {
+    return "Transaction ID is too long. Copy only the UPI Ref / UTR number.";
+  }
+  if (!/\d{8,}/.test(txn)) {
+    return "Enter the UPI Ref / UTR number from your payment receipt, not a name or UPI ID.";
+  }
+  return null;
+}
+
 export function isCashPayment(payment: PaymentRecord): boolean {
   return payment.method === "cash" || payment.transactionId.startsWith("CASH-");
 }

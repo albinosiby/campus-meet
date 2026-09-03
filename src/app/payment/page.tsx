@@ -15,8 +15,14 @@ import {
   formatPaidAt,
   isCashPayment,
   isFullyPaid,
+  isValidUpiTransactionId,
+  looksLikeUpiId,
   paymentMethodLabel,
   REGISTRATION_FEE,
+  sanitizeUpiTransactionIdInput,
+  UPI_TRANSACTION_ID_MAX_LENGTH,
+  UPI_TRANSACTION_ID_MIN_LENGTH,
+  upiTransactionIdError,
 } from "@/admin/payment";
 import { formatCurrency } from "@/admin/analytics";
 import { PaymentInstructions } from "@/landing/components/PaymentInstructions";
@@ -93,9 +99,12 @@ export default function PaymentPage() {
       setError(`Enter an amount between 1 and ${remaining}.`);
       return;
     }
-    if (paymentMethod === "upi" && txn.length < 8) {
-      setError("Enter a valid transaction ID (at least 8 characters).");
-      return;
+    if (paymentMethod === "upi") {
+      const txnError = upiTransactionIdError(txn);
+      if (txnError) {
+        setError(txnError);
+        return;
+      }
     }
 
     setError("");
@@ -370,12 +379,33 @@ export default function PaymentPage() {
                           id="transactionId"
                           name="transactionId"
                           required
-                          minLength={8}
+                          minLength={UPI_TRANSACTION_ID_MIN_LENGTH}
+                          maxLength={UPI_TRANSACTION_ID_MAX_LENGTH}
+                          autoComplete="off"
+                          autoCorrect="off"
+                          spellCheck={false}
+                          pattern="[A-Za-z0-9]{12,35}"
+                          title="Enter the UPI Ref / UTR number (usually 12 digits), not the UPI ID"
                           value={transactionId}
-                          onChange={(e) => setTransactionId(e.target.value)}
+                          onChange={(e) => {
+                            const raw = e.target.value;
+                            if (looksLikeUpiId(raw)) {
+                              setTransactionId("");
+                              setError(
+                                "That is a UPI ID. Enter the transaction / UTR number from your UPI app after paying — not the UPI ID."
+                              );
+                              return;
+                            }
+                            setTransactionId(sanitizeUpiTransactionIdInput(raw));
+                            setError("");
+                          }}
                           className={fieldClass}
-                          placeholder="Enter UPI reference / transaction ID"
+                          placeholder="e.g. 123456789012"
                         />
+                        <p className="mt-2 text-[11px] leading-relaxed text-cream-muted/50">
+                          Copy the UPI Ref / UTR number from your app after
+                          paying — not the UPI ID (name@bank).
+                        </p>
                       </div>
                     ) : null}
                   </div>
@@ -395,7 +425,7 @@ export default function PaymentPage() {
                       submitting ||
                       !payAmount ||
                       (paymentMethod === "upi" &&
-                        transactionId.trim().length < 8)
+                        !isValidUpiTransactionId(transactionId))
                     }
                     className="btn-primary w-full justify-center disabled:opacity-60"
                   >

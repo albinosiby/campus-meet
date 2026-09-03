@@ -1,3 +1,8 @@
+import {
+  looksLikeUpiId,
+  sanitizeUpiTransactionIdInput,
+} from "@/admin/payment";
+
 export interface RegistrationDraft {
   fullName: string;
   email: string;
@@ -38,11 +43,15 @@ export function loadRegistrationDraft(): RegistrationDraft {
     const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
     if (!raw) return EMPTY_REGISTRATION_DRAFT;
     const parsed = JSON.parse(raw) as Partial<RegistrationDraft>;
+    const storedTxn = String(parsed.transactionId ?? "");
     return {
       ...EMPTY_REGISTRATION_DRAFT,
       ...parsed,
       // Never restore a prefilled fee — amount must be entered each time.
       amountPaid: "",
+      transactionId: looksLikeUpiId(storedTxn)
+        ? ""
+        : sanitizeUpiTransactionIdInput(storedTxn),
     };
   } catch {
     return EMPTY_REGISTRATION_DRAFT;

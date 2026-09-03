@@ -39,9 +39,10 @@ export function downloadPdf(
     head: [[...EXPORT_HEADERS]],
     body: registrations.map((reg) => registrationToRow(reg)),
     styles: {
-      fontSize: 7.5,
-      cellPadding: 4,
+      fontSize: 6.5,
+      cellPadding: 3,
       textColor: [30, 32, 40],
+      overflow: "linebreak",
     },
     headStyles: {
       fillColor: [200, 164, 78],

@@ -84,7 +84,7 @@ export function PaymentInstructions({ className = "" }: { className?: string }) 
 
             <p className="text-[11px] leading-relaxed text-cream-muted/70">
               Scan the QR or pay exactly {formatRegistrationFee()} to this UPI
-              ID, then enter the transaction ID below.
+              ID, then enter the UPI Ref / UTR number below — not this UPI ID.
             </p>
           </div>
         </div>

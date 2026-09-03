@@ -54,7 +54,7 @@ export const EVENT_PAYMENT = {
   /** Fee is collected during registration via UPI. */
   collectLater: false,
   collectionNote:
-    "Pay ₹950 by UPI or cash. For UPI, scan the QR / use the UPI ID and enter your transaction ID. For cash, enter the amount only — no transaction ID needed.",
+    "Pay ₹950 by UPI or cash. For UPI, scan the QR / use the UPI ID, then enter the UPI Ref / UTR from your app — not the UPI ID. For cash, enter the amount only — no transaction ID needed.",
   emailMatchNote:
     "Use an email you can access. For UPI, keep your transaction ID ready after paying.",
   upiId: resolveUpiId(),
@@ -153,7 +153,7 @@ export const FAQ_ITEMS = [
   {
     question: "How do I make the payment?",
     answer:
-      "Choose UPI or cash on the registration page. For UPI, scan the QR or pay to ajinaugestin-1@okhdfcbank and enter the transaction ID. For cash, enter the amount only.",
+      "Choose UPI or cash on the registration page. For UPI, scan the QR or pay to ajinaugestin-1@okhdfcbank and enter the UPI Ref / UTR number from your app — not the UPI ID. For cash, enter the amount only.",
   },
   {
     question: "What should I bring?",

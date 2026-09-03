@@ -13,7 +13,7 @@ import type {
   YearOfStudy,
   Zone,
 } from "@/admin/types";
-import { cashTransactionId } from "@/admin/payment";
+import { cashTransactionId, upiTransactionIdError } from "@/admin/payment";
 import { RegistrationPaymentFields } from "@/landing/components/RegistrationPaymentFields";
 import {
   RegistrationPass,
@@ -93,8 +93,9 @@ export default function RegisterPage() {
           `Enter a valid amount between 1 and ${EVENT_PAYMENT.amount}.`
         );
       }
-      if (paymentMethod === "upi" && transactionId.length < 8) {
-        throw new Error("Transaction ID must be at least 8 characters.");
+      if (paymentMethod === "upi") {
+        const txnError = upiTransactionIdError(transactionId);
+        if (txnError) throw new Error(txnError);
       }
 
       const paidAt = new Date().toISOString();

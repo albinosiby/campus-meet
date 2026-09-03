@@ -2,13 +2,25 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isCashTxnId(txn) {
+      return txn.matches('^CASH-[0-9]{10,}$');
+    }
+
+    function isUpiTxnId(txn) {
+      return txn.matches('^[A-Za-z0-9]{12,35}$')
+        && txn.matches('.*[0-9]{8,}.*');
+    }
+
+    function isValidTxnId(txn) {
+      return txn is string && (isCashTxnId(txn) || isUpiTxnId(txn));
+    }
+
     function isValidPaymentEntry(entry) {
       return entry.keys().hasAll(['amount', 'transactionId', 'paidAt'])
         && entry.amount is number
         && entry.amount > 0
         && entry.amount <= 950
-        && entry.transactionId is string
-        && entry.transactionId.size() >= 8
+        && isValidTxnId(entry.transactionId)
         && entry.paidAt is string
         && entry.paidAt.size() > 0;
     }
@@ -36,8 +48,7 @@ service cloud.firestore {
         && request.resource.data.fullName.size() > 0
         && request.resource.data.email is string
         && request.resource.data.phone is string
-        && request.resource.data.transactionId is string
-        && request.resource.data.transactionId.size() >= 8
+        && isValidTxnId(request.resource.data.transactionId)
         && request.resource.data.amount is number
         && request.resource.data.amount > 0
         && request.resource.data.amount <= 950
@@ -84,8 +95,7 @@ service cloud.firestore {
             .hasOnly(['paymentStatus', 'transactionId', 'amount', 'payments'])
         && (resource.data.paymentStatus != 'paid' || hasLegacyNoPaymentProof())
         && request.resource.data.paymentStatus == 'pending'
-        && request.resource.data.transactionId is string
-        && request.resource.data.transactionId.size() >= 8
+        && isValidTxnId(request.resource.data.transactionId)
         && request.resource.data.amount is number
         && request.resource.data.amount > 0
         && request.resource.data.amount <= 950
