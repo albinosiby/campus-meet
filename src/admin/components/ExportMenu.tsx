@@ -56,7 +56,7 @@ export function ExportMenu({
   function handleExport(id: (typeof OPTIONS)[number]["id"]) {
     if (disabled) return;
     if (id === "csv") downloadCsv(registrations);
-    if (id === "excel") downloadExcel(registrations);
+    if (id === "excel") void downloadExcel(registrations);
     if (id === "pdf") downloadPdf(registrations, stats);
     setOpen(false);
   }
