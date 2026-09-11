@@ -41,6 +41,11 @@ export function RegistrationPaymentFields({
   const [txnHint, setTxnHint] = useState("");
   const configured = isUpiConfigured();
   const isUpi = paymentMethod === "upi";
+  const parsedAmount = Number(amountPaid);
+  const amountEntered =
+    amountPaid.trim() !== "" &&
+    Number.isFinite(parsedAmount) &&
+    parsedAmount > 0;
 
   function handleTransactionIdChange(raw: string) {
     if (looksLikeUpiId(raw)) {
@@ -183,20 +188,19 @@ export function RegistrationPaymentFields({
             htmlFor="amountPaid"
             className="mb-2 block text-xs font-heading text-cream-muted"
           >
-            Amount you are paying (of {formatRegistrationFee()}) *
+            Amount you are paying (of {formatRegistrationFee()})
           </label>
           <input
             type="number"
             id="amountPaid"
             name="amountPaid"
-            required
-            min={1}
+            min={0}
             max={EVENT_PAYMENT.amount}
             step={1}
             value={amountPaid}
             onChange={(e) => onAmountChange(e.target.value)}
             className={fieldClass}
-            placeholder="Enter amount paid"
+            placeholder="Optional"
           />
         </div>
         {isUpi ? (
@@ -205,20 +209,20 @@ export function RegistrationPaymentFields({
               htmlFor="transactionId"
               className="mb-2 block text-xs font-heading text-cream-muted"
             >
-              UPI Transaction ID *
+              UPI Transaction ID{amountEntered ? " *" : ""}
             </label>
             <input
               type="text"
               id="transactionId"
               name="transactionId"
-              required
-              minLength={UPI_TRANSACTION_ID_MIN_LENGTH}
+              required={amountEntered}
+              minLength={amountEntered ? UPI_TRANSACTION_ID_MIN_LENGTH : undefined}
               maxLength={UPI_TRANSACTION_ID_MAX_LENGTH}
               inputMode="text"
               autoComplete="off"
               autoCorrect="off"
               spellCheck={false}
-              pattern="[A-Za-z0-9]{12,35}"
+              pattern={amountEntered ? "[A-Za-z0-9]{12,35}" : undefined}
               title="Enter the UPI Ref / UTR number (usually 12 digits), not the UPI ID"
               value={transactionId}
               onChange={(e) => handleTransactionIdChange(e.target.value)}

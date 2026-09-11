@@ -13,7 +13,11 @@ import type {
   YearOfStudy,
   Zone,
 } from "@/admin/types";
-import { cashTransactionId, upiTransactionIdError } from "@/admin/payment";
+import {
+  cashTransactionId,
+  derivePaymentStatus,
+  upiTransactionIdError,
+} from "@/admin/payment";
 import { RegistrationPaymentFields } from "@/landing/components/RegistrationPaymentFields";
 import {
   RegistrationPass,
@@ -76,24 +80,29 @@ export default function RegisterPage() {
     setSubmitting(true);
 
     try {
-      const amountPaid = Number(draft.amountPaid);
+      const rawAmount = draft.amountPaid.trim();
+      const amountPaid = rawAmount === "" ? 0 : Number(rawAmount);
       const paymentMethod: PaymentMethod =
         draft.paymentMethod === "cash" ? "cash" : "upi";
-      const transactionId =
-        paymentMethod === "cash"
+      const hasPayment = amountPaid > 0;
+      const transactionId = !hasPayment
+        ? ""
+        : paymentMethod === "cash"
           ? cashTransactionId()
           : draft.transactionId.trim();
 
-      if (
-        !Number.isFinite(amountPaid) ||
-        amountPaid < 1 ||
-        amountPaid > EVENT_PAYMENT.amount
-      ) {
-        throw new Error(
-          `Enter a valid amount between 1 and ${EVENT_PAYMENT.amount}.`
-        );
+      if (rawAmount !== "") {
+        if (
+          !Number.isFinite(amountPaid) ||
+          amountPaid < 0 ||
+          amountPaid > EVENT_PAYMENT.amount
+        ) {
+          throw new Error(
+            `Enter a valid amount up to ${EVENT_PAYMENT.amount}, or leave it blank.`
+          );
+        }
       }
-      if (paymentMethod === "upi") {
+      if (hasPayment && paymentMethod === "upi") {
         const txnError = upiTransactionIdError(transactionId);
         if (txnError) throw new Error(txnError);
       }
@@ -112,16 +121,18 @@ export default function RegisterPage() {
         dietary: (draft.dietary || "none") as Dietary,
         amount: amountPaid,
         transactionId,
-        paymentStatus: "pending",
-        payments: [
-          {
-            amount: amountPaid,
-            transactionId,
-            paidAt,
-            source: "register",
-            method: paymentMethod,
-          },
-        ],
+        paymentStatus: derivePaymentStatus(amountPaid),
+        payments: hasPayment
+          ? [
+              {
+                amount: amountPaid,
+                transactionId,
+                paidAt,
+                source: "register",
+                method: paymentMethod,
+              },
+            ]
+          : [],
       });
       clearRegistrationDraft();
       setDraft(EMPTY_REGISTRATION_DRAFT);
