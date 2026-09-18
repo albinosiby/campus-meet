@@ -16,13 +16,12 @@ import {
   XCircle,
 } from "lucide-react";
 import { buildDashboardStats, formatCurrency } from "@/admin/analytics";
-import { PAYMENT_STATUS_LABELS, ZONE_LABELS } from "@/admin/constants";
+import { ZONE_LABELS } from "@/admin/constants";
 import {
   amountRemaining,
   eventDayVerificationLabel,
   isCashPayment,
   paymentMethodLabel,
-  paymentProgressLabel,
   sanitizeUpiTransactionIdInput,
   upiTransactionIdError,
 } from "@/admin/payment";
@@ -31,12 +30,7 @@ import {
   getRegistrations,
   updateEventDayStatus,
 } from "@/admin/storage";
-import type {
-  PaymentMethod,
-  PaymentStatus,
-  Registration,
-  Zone,
-} from "@/admin/types";
+import type { PaymentMethod, Registration, Zone } from "@/admin/types";
 import { formatPassId } from "@/shared/passId";
 import { AdminShell } from "./AdminShell";
 import { ExportMenu } from "./ExportMenu";
@@ -49,12 +43,6 @@ type EventFilter =
   | "spot-verified"
   | "need-spot-verify"
   | "unpaid";
-
-const PAYMENT_BADGES: Record<PaymentStatus, string> = {
-  paid: "border-emerald-200 bg-emerald-50 text-emerald-800",
-  pending: "border-amber-200 bg-amber-50 text-amber-800",
-  unpaid: "border-red-200 bg-red-50 text-red-700",
-};
 
 function formatDateTime(value?: string): string {
   if (!value) return "—";
@@ -378,9 +366,8 @@ export function EventDayOperations() {
                     Find person, update payment, spot-verify
                   </h2>
                   <p className="mt-1 text-sm text-admin-muted">
-                    Online status stays as registered. Spot verify is a new
-                    event-day status. Showing {filtered.length} · Present in
-                    this view: {filteredCheckedIn}
+                    Spot verify is a new event-day status. Showing{" "}
+                    {filtered.length} · Present in this view: {filteredCheckedIn}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -452,14 +439,13 @@ export function EventDayOperations() {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[1100px] table-auto text-left text-sm">
+              <table className="w-full min-w-[980px] table-auto text-left text-sm">
                 <thead>
                   <tr className="border-b border-admin-border bg-admin-elevated text-[11px] font-heading uppercase tracking-[0.14em] text-admin-muted">
                     <th className="px-5 py-3">Person</th>
                     <th className="px-4 py-3">Contact</th>
                     <th className="px-4 py-3">College</th>
                     <th className="px-4 py-3">Paid</th>
-                    <th className="px-4 py-3">Online status</th>
                     <th className="px-4 py-3">Spot verify</th>
                     <th className="px-4 py-3">Check In</th>
                     <th className="px-5 py-3 text-right">Actions</th>
@@ -523,16 +509,6 @@ export function EventDayOperations() {
                               ))}
                             </ul>
                           ) : null}
-                        </td>
-                        <td className="px-4 py-4">
-                          <span
-                            className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${PAYMENT_BADGES[reg.paymentStatus]}`}
-                          >
-                            {PAYMENT_STATUS_LABELS[reg.paymentStatus]}
-                          </span>
-                          <p className="mt-2 text-xs text-admin-muted">
-                            {paymentProgressLabel(reg)}
-                          </p>
                         </td>
                         <td className="px-4 py-4">
                           <span

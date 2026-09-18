@@ -33,7 +33,7 @@ export function SpotRegistrationForm({
   const [amountPaid, setAmountPaid] = useState(String(REGISTRATION_FEE));
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
   const [transactionId, setTransactionId] = useState("");
-  const [spotVerify, setSpotVerify] = useState(true);
+  const [spotVerify, setSpotVerify] = useState(false);
   const [checkIn, setCheckIn] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
