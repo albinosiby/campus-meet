@@ -141,7 +141,7 @@ export default function RegisterPage() {
         fullName: registration.fullName,
         college: registration.college,
         zone: registration.zone,
-        email: registration.email,
+        email: registration.email ?? draft.email.trim(),
         phone: registration.phone,
       });
     } catch (err) {

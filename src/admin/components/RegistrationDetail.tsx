@@ -186,17 +186,20 @@ export function RegistrationDetail({
                 </code>
               }
             />
-            <DetailRow label="Email" value={reg.email} />
+            <DetailRow label="Email" value={reg.email ?? "—"} />
             <DetailRow label="Phone" value={reg.phone} />
             <DetailRow label="Gender" value={GENDER_LABELS[reg.gender]} />
             <DetailRow label="College / University" value={reg.college} />
-            <DetailRow label="Course / Program" value={reg.course} />
-            <DetailRow label="Year of study" value={YEAR_LABELS[reg.year]} />
+            <DetailRow label="Course / Program" value={reg.course ?? "—"} />
+            <DetailRow
+              label="Year of study"
+              value={reg.year ? YEAR_LABELS[reg.year] : "—"}
+            />
             <DetailRow label="Zone" value={ZONE_LABELS[reg.zone]} />
             <DetailRow label="Diocese / Parish" value={reg.diocese || "—"} />
             <DetailRow
               label="Dietary preference"
-              value={DIETARY_LABELS[reg.dietary]}
+              value={reg.dietary ? DIETARY_LABELS[reg.dietary] : "—"}
             />
             <DetailRow
               label="Amount paid"

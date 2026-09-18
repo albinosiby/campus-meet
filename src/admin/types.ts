@@ -23,15 +23,15 @@ export interface PaymentRecord {
 export interface Registration {
   id: string;
   fullName: string;
-  email: string;
+  email: string | null;
   phone: string;
   gender: Gender;
   college: string;
-  course: string;
-  year: YearOfStudy;
+  course: string | null;
+  year: YearOfStudy | null;
   zone: Zone;
-  diocese: string;
-  dietary: Dietary;
+  diocese: string | null;
+  dietary: Dietary | null;
   /** Total amount paid so far (sum of payments). */
   amount: number;
   /** Latest transaction ID (convenience / legacy). */

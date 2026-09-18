@@ -78,13 +78,13 @@ function personMatchesSearch(reg: Registration, query: string): boolean {
 
   return (
     reg.fullName.toLowerCase().includes(q) ||
-    reg.email.toLowerCase().includes(q) ||
+    (reg.email ?? "").toLowerCase().includes(q) ||
     reg.phone.toLowerCase().includes(q) ||
     (digits.length >= 3 && phoneDigits.includes(digits)) ||
     passId.includes(q) ||
     reg.college.toLowerCase().includes(q) ||
-    reg.course.toLowerCase().includes(q) ||
-    reg.diocese.toLowerCase().includes(q) ||
+    (reg.course ?? "").toLowerCase().includes(q) ||
+    (reg.diocese ?? "").toLowerCase().includes(q) ||
     reg.transactionId.toLowerCase().includes(q) ||
     transactionIds.includes(q)
   );
@@ -487,7 +487,7 @@ export function EventDayOperations() {
                         <td className="px-4 py-4">
                           <p className="text-admin-ink">{reg.phone}</p>
                           <p className="mt-1 max-w-[180px] truncate text-xs text-admin-muted">
-                            {reg.email}
+                            {reg.email ?? "—"}
                           </p>
                         </td>
                         <td className="px-4 py-4">
@@ -495,7 +495,7 @@ export function EventDayOperations() {
                             {reg.college}
                           </p>
                           <p className="mt-1 text-xs text-admin-muted">
-                            {reg.course}
+                            {reg.course ?? "—"}
                           </p>
                         </td>
                         <td className="px-4 py-4">

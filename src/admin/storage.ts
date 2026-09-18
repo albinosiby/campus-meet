@@ -70,15 +70,15 @@ function mapRegistration(
   return {
     id: snapshot.id,
     fullName: String(data.fullName ?? ""),
-    email: String(data.email ?? ""),
+    email: typeof data.email === "string" && data.email ? data.email : null,
     phone: String(data.phone ?? ""),
     gender: data.gender,
     college: String(data.college ?? ""),
-    course: String(data.course ?? ""),
-    year: data.year,
+    course: typeof data.course === "string" && data.course ? data.course : null,
+    year: data.year ?? null,
     zone: data.zone,
-    diocese: String(data.diocese ?? ""),
-    dietary: data.dietary ?? "none",
+    diocese: typeof data.diocese === "string" && data.diocese ? data.diocese : null,
+    dietary: data.dietary ?? null,
     amount: totalPaid,
     transactionId:
       payments[payments.length - 1]?.transactionId || transactionId,
@@ -167,12 +167,15 @@ export async function addRegistration(
   input: RegistrationInput
 ): Promise<Registration> {
   const createdAt = new Date().toISOString();
-  const email = normalizeEmail(input.email);
-  const existing = await findRegistrationByEmail(email);
-  if (existing) {
-    throw new Error(
-      "This email is already registered. Please use the payment page to pay any remaining amount."
-    );
+  const email =
+    input.email && input.email.trim() ? normalizeEmail(input.email) : null;
+  if (email) {
+    const existing = await findRegistrationByEmail(email);
+    if (existing) {
+      throw new Error(
+        "This email is already registered. Please use the payment page to pay any remaining amount."
+      );
+    }
   }
   const payments =
     input.payments?.length > 0
@@ -195,6 +198,10 @@ export async function addRegistration(
   const payload = {
     ...input,
     email,
+    course: input.course?.trim() ? input.course.trim() : null,
+    year: input.year || null,
+    diocese: input.diocese?.trim() ? input.diocese.trim() : null,
+    dietary: input.dietary || null,
     amount,
     transactionId: payments[payments.length - 1]?.transactionId ?? "",
     payments,

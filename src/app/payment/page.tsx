@@ -282,7 +282,7 @@ export default function PaymentPage() {
                   {registration.fullName}
                 </p>
                 <p className="mt-1 text-sm text-cream-muted">
-                  {registration.email} · {registration.college}
+                  {registration.email ?? "—"} · {registration.college}
                 </p>
                 <button
                   type="button"

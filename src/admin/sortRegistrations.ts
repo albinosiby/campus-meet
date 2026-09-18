@@ -52,7 +52,7 @@ export function compareRegistrations(
         sensitivity: "base",
       });
     case "email-asc":
-      return a.email.localeCompare(b.email, undefined, {
+      return (a.email ?? "").localeCompare(b.email ?? "", undefined, {
         sensitivity: "base",
       });
     case "pass-asc":

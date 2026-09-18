@@ -305,15 +305,18 @@ export function RegistrationDetailPage() {
             </p>
             <dl className="mt-3 divide-y divide-admin-border/80">
               <Detail label="Pass ID" value={formatPassId(reg.id)} mono />
-              <Detail label="Email" value={reg.email} />
+              <Detail label="Email" value={reg.email ?? "—"} />
               <Detail label="Phone" value={reg.phone} />
               <Detail label="Gender" value={GENDER_LABELS[reg.gender]} />
               <Detail label="College" value={reg.college} />
-              <Detail label="Course" value={reg.course} />
-              <Detail label="Year" value={YEAR_LABELS[reg.year]} />
+              <Detail label="Course" value={reg.course ?? "—"} />
+              <Detail label="Year" value={reg.year ? YEAR_LABELS[reg.year] : "—"} />
               <Detail label="Zone" value={ZONE_LABELS[reg.zone]} />
               <Detail label="Diocese / Parish" value={reg.diocese || "—"} />
-              <Detail label="Dietary" value={DIETARY_LABELS[reg.dietary]} />
+              <Detail
+                label="Dietary"
+                value={reg.dietary ? DIETARY_LABELS[reg.dietary] : "—"}
+              />
               <Detail
                 label="Registered at"
                 value={formatPaidAt(reg.createdAt)}

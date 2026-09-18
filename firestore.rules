@@ -46,17 +46,20 @@ service cloud.firestore {
         ])
         && request.resource.data.fullName is string
         && request.resource.data.fullName.size() > 0
-        && request.resource.data.email is string
+        && (request.resource.data.email == null || request.resource.data.email is string)
         && request.resource.data.phone is string
+        && request.resource.data.college is string
+        && (request.resource.data.course == null || request.resource.data.course is string)
+        && (request.resource.data.diocese == null || request.resource.data.diocese is string)
         && request.resource.data.transactionId == ''
         && request.resource.data.amount == 0
         && request.resource.data.paymentStatus == 'unpaid'
         && request.resource.data.payments is list
         && request.resource.data.payments.size() == 0
         && request.resource.data.gender in ['male', 'female']
-        && request.resource.data.year in ['1', '2', '3', '4', '5', 'pg']
+        && (request.resource.data.year == null || request.resource.data.year in ['1', '2', '3', '4', '5', 'pg'])
         && request.resource.data.zone in ['kannur', 'kasargod', 'thalassery', 'kozhikode', 'mananthavady']
-        && request.resource.data.dietary in ['none', 'veg', 'nonveg'];
+        && (request.resource.data.dietary == null || request.resource.data.dietary in ['none', 'veg', 'nonveg']);
     }
 
     function isValidRegistrationCreate() {
@@ -67,8 +70,11 @@ service cloud.firestore {
         ])
         && request.resource.data.fullName is string
         && request.resource.data.fullName.size() > 0
-        && request.resource.data.email is string
+        && (request.resource.data.email == null || request.resource.data.email is string)
         && request.resource.data.phone is string
+        && request.resource.data.college is string
+        && (request.resource.data.course == null || request.resource.data.course is string)
+        && (request.resource.data.diocese == null || request.resource.data.diocese is string)
         && isValidTxnId(request.resource.data.transactionId)
         && request.resource.data.amount is number
         && request.resource.data.amount > 0
@@ -78,9 +84,9 @@ service cloud.firestore {
         && request.resource.data.paymentStatus == 'pending'
         && isValidPaymentsList(request.resource.data.payments)
         && request.resource.data.gender in ['male', 'female']
-        && request.resource.data.year in ['1', '2', '3', '4', '5', 'pg']
+        && (request.resource.data.year == null || request.resource.data.year in ['1', '2', '3', '4', '5', 'pg'])
         && request.resource.data.zone in ['kannur', 'kasargod', 'thalassery', 'kozhikode', 'mananthavady']
-        && request.resource.data.dietary in ['none', 'veg', 'nonveg'];
+        && (request.resource.data.dietary == null || request.resource.data.dietary in ['none', 'veg', 'nonveg']);
     }
 
     function isAdminPaymentUpdate() {

@@ -119,13 +119,13 @@ export function buildDashboardStats(registrations: Registration[]): DashboardSta
       GENDER_COLORS
     ),
     years: countByKey(
-      registrations,
+      registrations.filter((r) => r.year),
       (r) => r.year as YearOfStudy,
       YEAR_LABELS,
       YEAR_COLORS
     ),
     dietary: countByKey(
-      registrations,
+      registrations.filter((r) => r.dietary),
       (r) => r.dietary as Dietary,
       DIETARY_LABELS,
       DIETARY_COLORS

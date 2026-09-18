@@ -2,12 +2,7 @@
 
 import { FormEvent, useState, type ReactNode } from "react";
 import { Banknote, Smartphone, UserPlus, X } from "lucide-react";
-import {
-  DIETARY_LABELS,
-  GENDER_LABELS,
-  YEAR_LABELS,
-  ZONE_LABELS,
-} from "@/admin/constants";
+import { GENDER_LABELS, ZONE_LABELS } from "@/admin/constants";
 import {
   cashTransactionId,
   derivePaymentStatus,
@@ -16,14 +11,7 @@ import {
   upiTransactionIdError,
 } from "@/admin/payment";
 import { addRegistration } from "@/admin/storage";
-import type {
-  Dietary,
-  Gender,
-  PaymentMethod,
-  Registration,
-  YearOfStudy,
-  Zone,
-} from "@/admin/types";
+import type { Gender, PaymentMethod, Registration, Zone } from "@/admin/types";
 
 const fieldClass =
   "w-full rounded-sm border border-admin-border bg-admin-elevated px-3 py-2.5 text-sm text-admin-ink focus:border-gold/50 focus:outline-none";
@@ -38,15 +26,10 @@ export function SpotRegistrationForm({
   onClose,
 }: SpotRegistrationFormProps) {
   const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [gender, setGender] = useState<Gender | "">("");
   const [college, setCollege] = useState("");
-  const [course, setCourse] = useState("");
-  const [year, setYear] = useState<YearOfStudy | "">("");
   const [zone, setZone] = useState<Zone | "">("");
-  const [diocese, setDiocese] = useState("");
-  const [dietary, setDietary] = useState<Dietary>("none");
   const [amountPaid, setAmountPaid] = useState(String(REGISTRATION_FEE));
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
   const [transactionId, setTransactionId] = useState("");
@@ -60,15 +43,14 @@ export function SpotRegistrationForm({
     const amount = Number(amountPaid);
     const hasPayment = Number.isFinite(amount) && amount > 0;
 
-    if (!fullName.trim() || !email.trim() || !phone.trim()) {
-      setError("Name, email, and phone are required.");
+    if (!fullName.trim() || !phone.trim() || !gender || !college.trim() || !zone) {
+      setError("Name, gender, phone, campus, and zone are required.");
       return;
     }
-    if (!gender || !college.trim() || !course.trim() || !year || !zone) {
-      setError("Fill college, course, year, zone, and gender.");
-      return;
-    }
-    if (amountPaid !== "" && (!Number.isFinite(amount) || amount < 0 || amount > REGISTRATION_FEE)) {
+    if (
+      amountPaid !== "" &&
+      (!Number.isFinite(amount) || amount < 0 || amount > REGISTRATION_FEE)
+    ) {
       setError(`Amount must be between 0 and ${REGISTRATION_FEE}.`);
       return;
     }
@@ -92,15 +74,15 @@ export function SpotRegistrationForm({
     try {
       const registration = await addRegistration({
         fullName: fullName.trim(),
-        email: email.trim(),
+        email: null,
         phone: phone.trim(),
         gender,
         college: college.trim(),
-        course: course.trim(),
-        year,
+        course: null,
+        year: null,
         zone,
-        diocese: diocese.trim(),
-        dietary,
+        diocese: null,
+        dietary: null,
         amount: hasPayment ? amount : 0,
         transactionId: txn,
         paymentStatus: derivePaymentStatus(hasPayment ? amount : 0),
@@ -145,7 +127,7 @@ export function SpotRegistrationForm({
             Spot registration
           </h3>
           <p className="mt-1 text-sm text-admin-muted">
-            Register a person at the desk. Cash does not need a transaction ID.
+            Name, gender, zone, campus, phone, and payment.
           </p>
         </div>
         <button
@@ -159,7 +141,7 @@ export function SpotRegistrationForm({
       </div>
 
       <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
-        <Field label="Full name *">
+        <Field label="Name *">
           <input
             required
             value={fullName}
@@ -175,15 +157,6 @@ export function SpotRegistrationForm({
             className={fieldClass}
           />
         </Field>
-        <Field label="Email *">
-          <input
-            required
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className={fieldClass}
-          />
-        </Field>
         <Field label="Gender *">
           <select
             required
@@ -191,7 +164,7 @@ export function SpotRegistrationForm({
             onChange={(e) => setGender(e.target.value as Gender)}
             className={fieldClass}
           >
-            <option value="">Select</option>
+            <option value="">Select gender</option>
             {(Object.keys(GENDER_LABELS) as Gender[]).map((key) => (
               <option key={key} value={key}>
                 {GENDER_LABELS[key]}
@@ -199,36 +172,14 @@ export function SpotRegistrationForm({
             ))}
           </select>
         </Field>
-        <Field label="College *">
+        <Field label="Campus *">
           <input
             required
             value={college}
             onChange={(e) => setCollege(e.target.value)}
             className={fieldClass}
+            placeholder="College / campus"
           />
-        </Field>
-        <Field label="Course *">
-          <input
-            required
-            value={course}
-            onChange={(e) => setCourse(e.target.value)}
-            className={fieldClass}
-          />
-        </Field>
-        <Field label="Year *">
-          <select
-            required
-            value={year}
-            onChange={(e) => setYear(e.target.value as YearOfStudy)}
-            className={fieldClass}
-          >
-            <option value="">Select</option>
-            {(Object.keys(YEAR_LABELS) as YearOfStudy[]).map((key) => (
-              <option key={key} value={key}>
-                {YEAR_LABELS[key]}
-              </option>
-            ))}
-          </select>
         </Field>
         <Field label="Zone *">
           <select
@@ -237,30 +188,10 @@ export function SpotRegistrationForm({
             onChange={(e) => setZone(e.target.value as Zone)}
             className={fieldClass}
           >
-            <option value="">Select</option>
+            <option value="">Select zone</option>
             {(Object.keys(ZONE_LABELS) as Zone[]).map((key) => (
               <option key={key} value={key}>
                 {ZONE_LABELS[key]}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <Field label="Diocese / Parish">
-          <input
-            value={diocese}
-            onChange={(e) => setDiocese(e.target.value)}
-            className={fieldClass}
-          />
-        </Field>
-        <Field label="Dietary">
-          <select
-            value={dietary}
-            onChange={(e) => setDietary(e.target.value as Dietary)}
-            className={fieldClass}
-          >
-            {(Object.keys(DIETARY_LABELS) as Dietary[]).map((key) => (
-              <option key={key} value={key}>
-                {DIETARY_LABELS[key]}
               </option>
             ))}
           </select>
@@ -269,7 +200,7 @@ export function SpotRegistrationForm({
 
       <div className="mt-5 rounded-sm border border-admin-border bg-admin-elevated p-4">
         <p className="text-[10px] font-heading uppercase tracking-[0.16em] text-admin-muted">
-          Payment collected now
+          Payment
         </p>
         <div className="mt-2 grid grid-cols-2 gap-2">
           <button

@@ -113,12 +113,12 @@ export function RegistrationsTable({
 
       return (
         reg.fullName.toLowerCase().includes(q) ||
-        reg.email.toLowerCase().includes(q) ||
+        (reg.email ?? "").toLowerCase().includes(q) ||
         reg.phone.toLowerCase().includes(q) ||
         (digits.length >= 3 && phoneDigits.includes(digits)) ||
         passId.includes(q) ||
         reg.college.toLowerCase().includes(q) ||
-        reg.course.toLowerCase().includes(q) ||
+        (reg.course ?? "").toLowerCase().includes(q) ||
         reg.transactionId.toLowerCase().includes(q)
       );
     });
@@ -319,9 +319,14 @@ export function RegistrationsTable({
                         {reg.fullName}
                       </p>
                       <p className="mt-0.5 text-[11px] text-admin-muted">
-                        {reg.course} · {YEAR_LABELS[reg.year]} ·{" "}
-                        {GENDER_LABELS[reg.gender]} ·{" "}
-                        {DIETARY_LABELS[reg.dietary]}
+                        {[
+                          reg.course,
+                          reg.year ? YEAR_LABELS[reg.year] : null,
+                          GENDER_LABELS[reg.gender],
+                          reg.dietary ? DIETARY_LABELS[reg.dietary] : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
                       </p>
                     </td>
                     <td className="px-4 py-4">
@@ -330,7 +335,7 @@ export function RegistrationsTable({
                       </code>
                     </td>
                     <td className="px-4 py-4">
-                      <p className="text-admin-muted">{reg.email}</p>
+                      <p className="text-admin-muted">{reg.email ?? "—"}</p>
                       <p className="mt-0.5 text-[11px] text-admin-muted/80">
                         {reg.phone}
                       </p>
