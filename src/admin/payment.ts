@@ -161,6 +161,11 @@ export function paymentProgressLabel(reg: Registration): string {
   return "Awaiting verify";
 }
 
+/** Event-day desk verification — independent of online/register status. */
+export function eventDayVerificationLabel(reg: Registration): string {
+  return reg.paymentVerified ? "Spot verified" : "Not spot-verified";
+}
+
 export function derivePaymentStatus(amountPaid: number): PaymentStatus {
   if (amountPaid <= 0) return "unpaid";
   return "pending";

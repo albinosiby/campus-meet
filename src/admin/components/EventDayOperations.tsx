@@ -3,30 +3,51 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
+  Banknote,
   CheckCircle2,
   Clock3,
   CreditCard,
   RefreshCcw,
   Search,
+  Smartphone,
   UserCheck,
+  UserPlus,
   Users,
   XCircle,
 } from "lucide-react";
 import { buildDashboardStats, formatCurrency } from "@/admin/analytics";
 import { PAYMENT_STATUS_LABELS, ZONE_LABELS } from "@/admin/constants";
-import { amountRemaining, paymentProgressLabel } from "@/admin/payment";
-import { getRegistrations, updateEventDayStatus } from "@/admin/storage";
-import type { PaymentStatus, Registration, Zone } from "@/admin/types";
+import {
+  amountRemaining,
+  eventDayVerificationLabel,
+  isCashPayment,
+  paymentMethodLabel,
+  paymentProgressLabel,
+  sanitizeUpiTransactionIdInput,
+  upiTransactionIdError,
+} from "@/admin/payment";
+import {
+  appendAdminPayment,
+  getRegistrations,
+  updateEventDayStatus,
+} from "@/admin/storage";
+import type {
+  PaymentMethod,
+  PaymentStatus,
+  Registration,
+  Zone,
+} from "@/admin/types";
 import { formatPassId } from "@/shared/passId";
 import { AdminShell } from "./AdminShell";
 import { ExportMenu } from "./ExportMenu";
+import { SpotRegistrationForm } from "./SpotRegistrationForm";
 
 type EventFilter =
   | "all"
   | "present"
   | "not-present"
-  | "verified"
-  | "awaiting-verify"
+  | "spot-verified"
+  | "need-spot-verify"
   | "unpaid";
 
 const PAYMENT_BADGES: Record<PaymentStatus, string> = {
@@ -72,9 +93,9 @@ function personMatchesSearch(reg: Registration, query: string): boolean {
 function statusMatchesFilter(reg: Registration, filter: EventFilter): boolean {
   if (filter === "present") return reg.checkedIn;
   if (filter === "not-present") return !reg.checkedIn;
-  if (filter === "verified") return reg.paymentStatus === "paid";
-  if (filter === "awaiting-verify") return reg.paymentStatus === "pending";
-  if (filter === "unpaid") return reg.paymentStatus === "unpaid";
+  if (filter === "spot-verified") return reg.paymentVerified;
+  if (filter === "need-spot-verify") return !reg.paymentVerified;
+  if (filter === "unpaid") return reg.amount <= 0;
   return true;
 }
 
@@ -117,6 +138,12 @@ export function EventDayOperations() {
   const [zoneFilter, setZoneFilter] = useState<Zone | "all">("all");
   const [eventFilter, setEventFilter] = useState<EventFilter>("all");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [payFormId, setPayFormId] = useState<string | null>(null);
+  const [payAmount, setPayAmount] = useState("");
+  const [payMethod, setPayMethod] = useState<PaymentMethod>("cash");
+  const [payTxn, setPayTxn] = useState("");
+  const [payError, setPayError] = useState("");
+  const [showSpotForm, setShowSpotForm] = useState(false);
 
   async function loadRegistrations() {
     setLoaded(false);
@@ -148,14 +175,14 @@ export function EventDayOperations() {
   const stats = useMemo(() => buildDashboardStats(filtered), [filtered]);
   const checkedInCount = registrations.filter((reg) => reg.checkedIn).length;
   const filteredCheckedIn = filtered.filter((reg) => reg.checkedIn).length;
-  const verifiedCount = registrations.filter(
-    (reg) => reg.paymentStatus === "paid"
+  const spotVerifiedCount = registrations.filter(
+    (reg) => reg.paymentVerified
   ).length;
-  const awaitingVerifyCount = registrations.filter(
-    (reg) => reg.paymentStatus === "pending"
+  const needSpotVerifyCount = registrations.filter(
+    (reg) => !reg.paymentVerified
   ).length;
   const totalCollected = registrations
-    .filter((reg) => reg.paymentStatus === "paid")
+    .filter((reg) => reg.paymentVerified)
     .reduce((sum, reg) => sum + (reg.verifiedAmount ?? reg.amount ?? 0), 0);
 
   async function patchRegistration(
@@ -180,18 +207,24 @@ export function EventDayOperations() {
     }
   }
 
-  function verifyPayment(reg: Registration) {
+  function openPayForm(reg: Registration) {
+    setPayFormId(reg.id);
+    setPayAmount(String(amountRemaining(reg.amount) || ""));
+    setPayMethod("cash");
+    setPayTxn("");
+    setPayError("");
+  }
+
+  function spotVerify(reg: Registration) {
     const now = new Date().toISOString();
     void patchRegistration(
       reg.id,
       {
-        paymentStatus: "paid",
         paymentVerified: true,
         paymentVerifiedAt: now,
         verifiedAmount: reg.amount,
       },
       {
-        paymentStatus: "paid",
         paymentVerified: true,
         paymentVerifiedAt: now,
         verifiedAmount: reg.amount,
@@ -199,18 +232,15 @@ export function EventDayOperations() {
     );
   }
 
-  function undoPaymentVerification(reg: Registration) {
-    const nextStatus: PaymentStatus = reg.amount > 0 ? "pending" : "unpaid";
+  function undoSpotVerify(reg: Registration) {
     void patchRegistration(
       reg.id,
       {
-        paymentStatus: nextStatus,
         paymentVerified: false,
         paymentVerifiedAt: "",
         verifiedAmount: 0,
       },
       {
-        paymentStatus: nextStatus,
         paymentVerified: false,
         paymentVerifiedAt: "",
         verifiedAmount: 0,
@@ -228,10 +258,51 @@ export function EventDayOperations() {
     );
   }
 
+  async function submitEventDayPayment(reg: Registration) {
+    const remaining = amountRemaining(reg.amount);
+    const amount = Number(payAmount);
+    if (!Number.isFinite(amount) || amount < 1 || amount > remaining) {
+      setPayError(`Enter an amount between 1 and ${remaining}.`);
+      return;
+    }
+    if (payMethod === "upi") {
+      const txnError = upiTransactionIdError(payTxn);
+      if (txnError) {
+        setPayError(txnError);
+        return;
+      }
+    }
+
+    setUpdatingId(reg.id);
+    setPayError("");
+    try {
+      const updated = await appendAdminPayment(
+        reg.id,
+        amount,
+        payMethod === "upi" ? payTxn : undefined,
+        payMethod
+      );
+      setRegistrations((rows) =>
+        rows.map((row) => (row.id === reg.id ? updated : row))
+      );
+      setPayFormId(null);
+      setPayTxn("");
+      setLoadError("");
+    } catch (error) {
+      setPayError(
+        error instanceof Error
+          ? error.message
+          : "Could not add this payment. Try again."
+      );
+    } finally {
+      setUpdatingId(null);
+    }
+  }
+
   return (
     <AdminShell
       title="Event Day Desk"
-      subtitle="Search, verify payment, check in participants, and export attendance"
+      subtitle="Spot register walk-ins, collect remaining fee, spot-verify, and check in"
     >
       {!loaded ? (
         <div className="flex h-64 items-center justify-center">
@@ -250,6 +321,18 @@ export function EventDayOperations() {
             </p>
           ) : null}
 
+          {showSpotForm ? (
+            <SpotRegistrationForm
+              onClose={() => setShowSpotForm(false)}
+              onCreated={(registration) => {
+                setRegistrations((rows) => [registration, ...rows]);
+                setShowSpotForm(false);
+                setQuery(registration.fullName);
+                setLoadError("");
+              }}
+            />
+          ) : null}
+
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
             <SummaryCard
               label="Total Registered"
@@ -264,21 +347,21 @@ export function EventDayOperations() {
               icon={UserCheck}
             />
             <SummaryCard
-              label="Verified"
-              value={verifiedCount}
-              helper="Payment confirmed"
+              label="Spot Verified"
+              value={spotVerifiedCount}
+              helper="Verified at event desk"
               icon={CheckCircle2}
             />
             <SummaryCard
-              label="Need Verify"
-              value={awaitingVerifyCount}
-              helper="Paid, waiting check"
+              label="Need Spot Verify"
+              value={needSpotVerifyCount}
+              helper="Not yet verified here"
               icon={Clock3}
             />
             <SummaryCard
-              label="Collected"
+              label="Spot Collected"
               value={formatCurrency(totalCollected)}
-              helper="Verified amount"
+              helper="Amount on spot-verified records"
               icon={CreditCard}
             />
           </div>
@@ -288,17 +371,26 @@ export function EventDayOperations() {
               <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
                 <div>
                   <p className="text-xs font-heading uppercase tracking-[0.22em] text-gold-dim">
-                    Live Firebase Operations
+                    Event-day payment desk
                   </p>
                   <h2 className="mt-2 font-heading text-xl font-bold text-admin-ink">
-                    Find Person & Mark Attendance
+                    Find person, update payment, spot-verify
                   </h2>
                   <p className="mt-1 text-sm text-admin-muted">
-                    Showing {filtered.length} records · Present in this view:{" "}
-                    {filteredCheckedIn}
+                    Online status stays as registered. Spot verify is a new
+                    event-day status. Showing {filtered.length} · Present in
+                    this view: {filteredCheckedIn}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowSpotForm((open) => !open)}
+                    className="inline-flex items-center gap-2 rounded-sm border border-gold/40 bg-gold px-3 py-2.5 text-xs font-heading uppercase tracking-[0.14em] text-obsidian"
+                  >
+                    <UserPlus className="h-3.5 w-3.5" />
+                    {showSpotForm ? "Close form" : "Spot registration"}
+                  </button>
                   <button
                     type="button"
                     onClick={() => void loadRegistrations()}
@@ -351,22 +443,23 @@ export function EventDayOperations() {
                   <option value="all">All people</option>
                   <option value="present">Checked in</option>
                   <option value="not-present">Not present</option>
-                  <option value="verified">Payment verified</option>
-                  <option value="awaiting-verify">Need payment verify</option>
-                  <option value="unpaid">Unpaid</option>
+                  <option value="spot-verified">Spot verified</option>
+                  <option value="need-spot-verify">Need spot verify</option>
+                  <option value="unpaid">No payment yet</option>
                 </select>
               </div>
             </div>
 
             <div className="overflow-x-auto">
-              <table className="min-w-[1120px] text-left text-sm">
+              <table className="min-w-[1280px] text-left text-sm">
                 <thead>
                   <tr className="border-b border-admin-border bg-admin-elevated text-[11px] font-heading uppercase tracking-[0.14em] text-admin-muted">
                     <th className="px-5 py-3">Person</th>
                     <th className="px-4 py-3">Contact</th>
                     <th className="px-4 py-3">College</th>
                     <th className="px-4 py-3">Paid</th>
-                    <th className="px-4 py-3">Payment</th>
+                    <th className="px-4 py-3">Online status</th>
+                    <th className="px-4 py-3">Spot verify</th>
                     <th className="px-4 py-3">Check In</th>
                     <th className="px-5 py-3 text-right">Actions</th>
                   </tr>
@@ -375,9 +468,13 @@ export function EventDayOperations() {
                   {filtered.map((reg) => {
                     const remaining = amountRemaining(reg.amount);
                     const disabled = updatingId === reg.id;
+                    const showPayForm = payFormId === reg.id;
 
                     return (
-                      <tr key={reg.id} className="align-top hover:bg-admin-elevated/70">
+                      <tr
+                        key={reg.id}
+                        className="align-top hover:bg-admin-elevated/70"
+                      >
                         <td className="px-5 py-4">
                           <p className="font-heading font-semibold text-admin-ink">
                             {reg.fullName}
@@ -406,9 +503,25 @@ export function EventDayOperations() {
                           </p>
                           <p className="mt-1 text-xs text-admin-muted">
                             {remaining > 0
-                              ? `${formatCurrency(remaining)} pending`
+                              ? `${formatCurrency(remaining)} remaining`
                               : "Full amount paid"}
                           </p>
+                          {reg.payments.length > 0 ? (
+                            <ul className="mt-2 space-y-1">
+                              {reg.payments.map((payment, index) => (
+                                <li
+                                  key={`${payment.transactionId}-${index}`}
+                                  className="text-[11px] text-admin-muted"
+                                >
+                                  {formatCurrency(payment.amount)} ·{" "}
+                                  {paymentMethodLabel(payment)}
+                                  {!isCashPayment(payment)
+                                    ? ` · ${payment.transactionId}`
+                                    : ""}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : null}
                         </td>
                         <td className="px-4 py-4">
                           <span
@@ -419,11 +532,26 @@ export function EventDayOperations() {
                           <p className="mt-2 text-xs text-admin-muted">
                             {paymentProgressLabel(reg)}
                           </p>
+                        </td>
+                        <td className="px-4 py-4">
+                          <span
+                            className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${
+                              reg.paymentVerified
+                                ? "border-sky-200 bg-sky-50 text-sky-800"
+                                : "border-admin-border bg-admin-elevated text-admin-muted"
+                            }`}
+                          >
+                            {eventDayVerificationLabel(reg)}
+                          </span>
                           {reg.paymentVerifiedAt ? (
-                            <p className="mt-1 text-[11px] text-admin-muted">
-                              Verified {formatDateTime(reg.paymentVerifiedAt)}
+                            <p className="mt-2 text-[11px] text-admin-muted">
+                              {formatDateTime(reg.paymentVerifiedAt)}
                             </p>
-                          ) : null}
+                          ) : (
+                            <p className="mt-2 text-xs text-admin-muted">
+                              Desk has not verified yet
+                            </p>
+                          )}
                         </td>
                         <td className="px-4 py-4">
                           <span
@@ -442,41 +570,130 @@ export function EventDayOperations() {
                           </p>
                         </td>
                         <td className="px-5 py-4">
-                          <div className="flex flex-wrap justify-end gap-2">
-                            {reg.paymentStatus === "paid" ? (
+                          <div className="flex flex-col items-end gap-2">
+                            <div className="flex flex-wrap justify-end gap-2">
+                              {remaining > 0 ? (
+                                <button
+                                  type="button"
+                                  disabled={disabled}
+                                  onClick={() =>
+                                    showPayForm
+                                      ? setPayFormId(null)
+                                      : openPayForm(reg)
+                                  }
+                                  className="inline-flex items-center gap-1.5 rounded-sm border border-gold/40 bg-gold/10 px-3 py-2 text-xs font-heading uppercase tracking-[0.12em] text-admin-ink disabled:opacity-50"
+                                >
+                                  {showPayForm ? "Close" : "Add payment"}
+                                </button>
+                              ) : null}
+                              {reg.paymentVerified ? (
+                                <button
+                                  type="button"
+                                  disabled={disabled}
+                                  onClick={() => undoSpotVerify(reg)}
+                                  className="inline-flex items-center gap-1.5 rounded-sm border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-heading uppercase tracking-[0.12em] text-amber-800 disabled:opacity-50"
+                                >
+                                  <XCircle className="h-3.5 w-3.5" />
+                                  Undo spot
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  disabled={disabled || reg.amount <= 0}
+                                  onClick={() => spotVerify(reg)}
+                                  className="inline-flex items-center gap-1.5 rounded-sm border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-heading uppercase tracking-[0.12em] text-sky-800 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                  <CheckCircle2 className="h-3.5 w-3.5" />
+                                  Spot verify
+                                </button>
+                              )}
                               <button
                                 type="button"
                                 disabled={disabled}
-                                onClick={() => undoPaymentVerification(reg)}
-                                className="inline-flex items-center gap-1.5 rounded-sm border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-heading uppercase tracking-[0.12em] text-amber-800 disabled:opacity-50"
+                                onClick={() => toggleCheckIn(reg)}
+                                className={`inline-flex items-center gap-1.5 rounded-sm border px-3 py-2 text-xs font-heading uppercase tracking-[0.12em] disabled:opacity-50 ${
+                                  reg.checkedIn
+                                    ? "border-admin-border bg-admin-elevated text-admin-muted"
+                                    : "border-gold/40 bg-gold text-obsidian hover:bg-gold-bright"
+                                }`}
                               >
-                                <XCircle className="h-3.5 w-3.5" />
-                                Undo Verify
+                                <UserCheck className="h-3.5 w-3.5" />
+                                {reg.checkedIn ? "Undo Check In" : "Check In"}
                               </button>
-                            ) : (
-                              <button
-                                type="button"
-                                disabled={disabled || reg.amount <= 0}
-                                onClick={() => verifyPayment(reg)}
-                                className="inline-flex items-center gap-1.5 rounded-sm border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-heading uppercase tracking-[0.12em] text-emerald-800 disabled:cursor-not-allowed disabled:opacity-50"
-                              >
-                                <CheckCircle2 className="h-3.5 w-3.5" />
-                                Verify Paid
-                              </button>
-                            )}
-                            <button
-                              type="button"
-                              disabled={disabled}
-                              onClick={() => toggleCheckIn(reg)}
-                              className={`inline-flex items-center gap-1.5 rounded-sm border px-3 py-2 text-xs font-heading uppercase tracking-[0.12em] disabled:opacity-50 ${
-                                reg.checkedIn
-                                  ? "border-admin-border bg-admin-elevated text-admin-muted"
-                                  : "border-gold/40 bg-gold text-obsidian hover:bg-gold-bright"
-                              }`}
-                            >
-                              <UserCheck className="h-3.5 w-3.5" />
-                              {reg.checkedIn ? "Undo Check In" : "Check In"}
-                            </button>
+                            </div>
+
+                            {showPayForm && remaining > 0 ? (
+                              <div className="w-full max-w-sm rounded-sm border border-admin-border bg-admin-elevated p-3">
+                                <p className="text-[10px] font-heading uppercase tracking-[0.14em] text-admin-muted">
+                                  New desk payment
+                                </p>
+                                <div className="mt-2 grid grid-cols-2 gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => setPayMethod("cash")}
+                                    className={`inline-flex items-center justify-center gap-1 rounded-sm border px-2 py-1.5 text-[10px] font-heading uppercase tracking-[0.1em] ${
+                                      payMethod === "cash"
+                                        ? "border-gold/50 bg-gold/15 text-admin-ink"
+                                        : "border-admin-border text-admin-muted"
+                                    }`}
+                                  >
+                                    <Banknote className="h-3 w-3" />
+                                    Cash
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setPayMethod("upi")}
+                                    className={`inline-flex items-center justify-center gap-1 rounded-sm border px-2 py-1.5 text-[10px] font-heading uppercase tracking-[0.1em] ${
+                                      payMethod === "upi"
+                                        ? "border-gold/50 bg-gold/15 text-admin-ink"
+                                        : "border-admin-border text-admin-muted"
+                                    }`}
+                                  >
+                                    <Smartphone className="h-3 w-3" />
+                                    UPI
+                                  </button>
+                                </div>
+                                <input
+                                  type="number"
+                                  min={1}
+                                  max={remaining}
+                                  value={payAmount}
+                                  onChange={(e) => setPayAmount(e.target.value)}
+                                  className="mt-2 w-full rounded-sm border border-admin-border bg-admin-surface px-2 py-1.5 text-sm"
+                                  placeholder={`Amount (max ${remaining})`}
+                                />
+                                {payMethod === "upi" ? (
+                                  <input
+                                    type="text"
+                                    value={payTxn}
+                                    onChange={(e) =>
+                                      setPayTxn(
+                                        sanitizeUpiTransactionIdInput(
+                                          e.target.value
+                                        )
+                                      )
+                                    }
+                                    className="mt-2 w-full rounded-sm border border-admin-border bg-admin-surface px-2 py-1.5 text-sm"
+                                    placeholder="UPI transaction ID"
+                                  />
+                                ) : null}
+                                {payError ? (
+                                  <p className="mt-2 text-[11px] text-red-600">
+                                    {payError}
+                                  </p>
+                                ) : null}
+                                <button
+                                  type="button"
+                                  disabled={disabled}
+                                  onClick={() =>
+                                    void submitEventDayPayment(reg)
+                                  }
+                                  className="mt-2 w-full rounded-sm border border-emerald-300 bg-emerald-600 px-3 py-2 text-[11px] font-heading uppercase tracking-[0.12em] text-white disabled:opacity-50"
+                                >
+                                  Save payment
+                                </button>
+                              </div>
+                            ) : null}
                           </div>
                         </td>
                       </tr>

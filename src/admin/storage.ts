@@ -83,10 +83,7 @@ function mapRegistration(
     transactionId:
       payments[payments.length - 1]?.transactionId || transactionId,
     paymentStatus,
-    paymentVerified:
-      typeof data.paymentVerified === "boolean"
-        ? data.paymentVerified
-        : paymentStatus === "paid",
+    paymentVerified: data.paymentVerified === true,
     paymentVerifiedAt:
       typeof data.paymentVerifiedAt === "string"
         ? data.paymentVerifiedAt
@@ -94,9 +91,7 @@ function mapRegistration(
     verifiedAmount:
       typeof data.verifiedAmount === "number"
         ? data.verifiedAmount
-        : paymentStatus === "paid"
-          ? totalPaid
-          : undefined,
+        : undefined,
     checkedIn: Boolean(data.checkedIn),
     checkedInAt:
       typeof data.checkedInAt === "string" ? data.checkedInAt : undefined,
@@ -204,11 +199,11 @@ export async function addRegistration(
     transactionId: payments[payments.length - 1]?.transactionId ?? "",
     payments,
     paymentStatus: input.paymentStatus || derivePaymentStatus(amount),
-    paymentVerified: false,
-    paymentVerifiedAt: "",
-    verifiedAmount: 0,
-    checkedIn: false,
-    checkedInAt: "",
+    paymentVerified: Boolean(input.paymentVerified),
+    paymentVerifiedAt: input.paymentVerifiedAt ?? "",
+    verifiedAmount: input.verifiedAmount ?? 0,
+    checkedIn: Boolean(input.checkedIn),
+    checkedInAt: input.checkedInAt ?? "",
     createdAt,
     createdAtServer: serverTimestamp(),
   };
@@ -404,12 +399,13 @@ export async function submitRegistrationPayment(
   await appendRegistrationPayment(id, payAmount, transactionId);
 }
 
-/** Admin: record a cash / manual installment. */
+/** Admin: record a cash / UPI installment without changing online verify status. */
 export async function appendAdminPayment(
   id: string,
   amount: number,
-  transactionId?: string
-): Promise<void> {
+  transactionId?: string,
+  method: PaymentMethod = "cash"
+): Promise<Registration> {
   const current = await getRegistrationById(id);
   if (!current) throw new Error("Registration not found.");
 
@@ -421,25 +417,36 @@ export async function appendAdminPayment(
     throw new Error("Enter a valid amount.");
   }
   const payAmount = Math.min(amount, remaining);
+  const isCash = method === "cash";
   const txn = (transactionId ?? "").trim();
-  const isCash = txn.length < 8;
+  if (!isCash) {
+    assertValidUpiTransactionId(txn);
+  }
+
   const nextPayment = createPaymentRecord({
     amount: payAmount,
-    transactionId: isCash ? `CASH-${Date.now()}` : txn,
+    transactionId: isCash ? cashTransactionId() : txn,
     source: "admin",
     method: isCash ? "cash" : "upi",
   });
 
   const payments = [...current.payments, nextPayment];
   const totalPaid = sumPayments(payments);
-  const fully = isFullyPaid(totalPaid);
 
   await updateDoc(doc(getFirebaseDb(), REGISTRATIONS_COLLECTION, id), {
     payments,
     amount: totalPaid,
     transactionId: nextPayment.transactionId,
-    paymentStatus: (fully ? "paid" : "pending") as PaymentStatus,
+    paymentStatus: "pending" as PaymentStatus,
   });
+
+  return {
+    ...current,
+    payments,
+    amount: totalPaid,
+    transactionId: nextPayment.transactionId,
+    paymentStatus: "pending",
+  };
 }
 
 export async function deleteRegistration(id: string): Promise<void> {

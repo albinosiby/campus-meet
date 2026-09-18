@@ -102,7 +102,12 @@ export function RegistrationDetailPage() {
     setSaving(true);
     setError("");
     try {
-      await appendAdminPayment(reg.id, amount, manualTxn.trim() || undefined);
+      await appendAdminPayment(
+        reg.id,
+        amount,
+        manualTxn.trim() || undefined,
+        manualTxn.trim() ? "upi" : "cash"
+      );
       await reload();
       setManualTxn("");
     } catch (err) {

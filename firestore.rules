@@ -38,6 +38,27 @@ service cloud.firestore {
       ];
     }
 
+    function isValidUnpaidRegistrationCreate() {
+      return request.resource.data.keys().hasAll([
+          'fullName', 'email', 'phone', 'gender', 'college', 'course',
+          'year', 'zone', 'diocese', 'dietary', 'amount',
+          'transactionId', 'paymentStatus', 'payments', 'createdAt'
+        ])
+        && request.resource.data.fullName is string
+        && request.resource.data.fullName.size() > 0
+        && request.resource.data.email is string
+        && request.resource.data.phone is string
+        && request.resource.data.transactionId == ''
+        && request.resource.data.amount == 0
+        && request.resource.data.paymentStatus == 'unpaid'
+        && request.resource.data.payments is list
+        && request.resource.data.payments.size() == 0
+        && request.resource.data.gender in ['male', 'female']
+        && request.resource.data.year in ['1', '2', '3', '4', '5', 'pg']
+        && request.resource.data.zone in ['kannur', 'kasargod', 'thalassery', 'kozhikode', 'mananthavady']
+        && request.resource.data.dietary in ['none', 'veg', 'nonveg'];
+    }
+
     function isValidRegistrationCreate() {
       return request.resource.data.keys().hasAll([
           'fullName', 'email', 'phone', 'gender', 'college', 'course',
@@ -140,7 +161,7 @@ service cloud.firestore {
     }
 
     match /registrations/{registrationId} {
-      allow create: if isValidRegistrationCreate();
+      allow create: if isValidRegistrationCreate() || isValidUnpaidRegistrationCreate();
       allow read: if true;
       allow update: if isAdminPaymentUpdate() || isPublicPaymentSubmit();
       allow delete: if true;
