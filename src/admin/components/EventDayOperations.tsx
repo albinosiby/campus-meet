@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { CheckCircle2, RefreshCcw, Search, UserPlus, Users, XCircle } from "lucide-react";
+import { CheckCircle2, RefreshCcw, Search, UserCheck, UserPlus, Users, XCircle } from "lucide-react";
 import { buildDashboardStats } from "@/admin/analytics";
 import { ZONE_LABELS } from "@/admin/constants";
 import {
@@ -65,8 +65,8 @@ function personMatchesSearch(reg: Registration, query: string): boolean {
 function statusMatchesFilter(reg: Registration, filter: EventFilter): boolean {
   if (filter === "present") return reg.checkedIn;
   if (filter === "not-present") return !reg.checkedIn;
-  if (filter === "paid-full") return reg.paymentVerified && reg.checkedIn;
-  if (filter === "waiting") return !(reg.paymentVerified && reg.checkedIn);
+  if (filter === "paid-full") return reg.paymentVerified;
+  if (filter === "waiting") return !reg.paymentVerified;
   if (filter === "unpaid") return reg.amount <= 0;
   return true;
 }
@@ -141,12 +141,10 @@ export function EventDayOperations() {
 
   const stats = useMemo(() => buildDashboardStats(filtered), [filtered]);
   const paidFullCount = registrations.filter(
-    (reg) => reg.paymentVerified && reg.checkedIn
+    (reg) => reg.paymentVerified
   ).length;
-  const waitingCount = registrations.length - paidFullCount;
-  const filteredPaidFull = filtered.filter(
-    (reg) => reg.paymentVerified && reg.checkedIn
-  ).length;
+  const checkedInCount = registrations.filter((reg) => reg.checkedIn).length;
+  const filteredCheckedIn = filtered.filter((reg) => reg.checkedIn).length;
 
   async function patchRegistration(
     id: string,
@@ -162,15 +160,19 @@ export function EventDayOperations() {
     try {
       await updateEventDayStatus(id, remotePatch);
       setLoadError("");
-    } catch {
+    } catch (error) {
       setRegistrations(previous);
-      setLoadError("Could not update this person. Check Firestore rules.");
+      setLoadError(
+        error instanceof Error
+          ? error.message
+          : "Could not update this person. Try again."
+      );
     } finally {
       setUpdatingId(null);
     }
   }
 
-  async function paidFullCheckIn(reg: Registration) {
+  async function markPaidFull(reg: Registration) {
     const previous = registrations;
     setUpdatingId(reg.id);
     try {
@@ -179,24 +181,36 @@ export function EventDayOperations() {
         rows.map((row) => (row.id === reg.id ? updated : row))
       );
       setLoadError("");
-    } catch {
+    } catch (error) {
       setRegistrations(previous);
-      setLoadError("Could not update this person. Check Firestore rules.");
+      setLoadError(
+        error instanceof Error
+          ? error.message
+          : "Could not update this person. Try again."
+      );
     } finally {
       setUpdatingId(null);
     }
   }
 
-  function undoPaidFullCheckIn(reg: Registration) {
+  function undoPaidFull(reg: Registration) {
     const patch = {
       paymentVerified: false,
       paymentVerifiedAt: "",
       verifiedAmount: 0,
-      checkedIn: false,
-      checkedInAt: "",
       paymentStatus: derivePaymentStatus(reg.amount),
     };
     void patchRegistration(reg.id, patch, patch);
+  }
+
+  function toggleCheckIn(reg: Registration) {
+    const checkedIn = !reg.checkedIn;
+    const checkedInAt = checkedIn ? new Date().toISOString() : "";
+    void patchRegistration(
+      reg.id,
+      { checkedIn, checkedInAt },
+      { checkedIn, checkedInAt }
+    );
   }
 
   return (
@@ -242,16 +256,16 @@ export function EventDayOperations() {
               icon={Users}
             />
             <SummaryCard
-              label="Paid Full · Check In"
+              label="Paid Full"
               value={paidFullCount}
-              helper="Paid full and present"
+              helper="₹950 marked at desk"
               icon={CheckCircle2}
             />
             <SummaryCard
-              label="Waiting"
-              value={waitingCount}
-              helper="Not yet paid full check-in"
-              icon={Users}
+              label="Checked In"
+              value={checkedInCount}
+              helper={`${Math.max(0, registrations.length - checkedInCount)} not present`}
+              icon={UserCheck}
             />
           </div>
 
@@ -263,11 +277,11 @@ export function EventDayOperations() {
                     Event-day payment desk
                   </p>
                   <h2 className="mt-2 font-heading text-xl font-bold text-admin-ink">
-                    Find person, paid full check-in
+                    Find person, mark paid full, check in
                   </h2>
                   <p className="mt-1 text-sm text-admin-muted">
-                    Showing {filtered.length} · Paid full check-in in this view:{" "}
-                    {filteredPaidFull}
+                    Showing {filtered.length} · Present in this view:{" "}
+                    {filteredCheckedIn}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -329,10 +343,10 @@ export function EventDayOperations() {
                   className="rounded-sm border border-admin-border bg-admin-elevated px-3 py-3 text-sm text-admin-ink focus:border-gold/50 focus:outline-none"
                 >
                   <option value="all">All people</option>
-                  <option value="paid-full">Paid full check-in</option>
-                  <option value="waiting">Waiting</option>
                   <option value="present">Checked in</option>
                   <option value="not-present">Not present</option>
+                  <option value="paid-full">Paid full</option>
+                  <option value="waiting">Not paid full</option>
                   <option value="unpaid">No payment yet</option>
                 </select>
               </div>
@@ -345,7 +359,8 @@ export function EventDayOperations() {
                     <th className="px-5 py-3">Person</th>
                     <th className="px-4 py-3">Contact</th>
                     <th className="px-4 py-3">College</th>
-                    <th className="px-4 py-3">Paid full / Check in</th>
+                    <th className="px-4 py-3">Paid full</th>
+                    <th className="px-4 py-3">Check in</th>
                     <th className="px-5 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
@@ -383,12 +398,23 @@ export function EventDayOperations() {
                         <td className="px-4 py-4">
                           <span
                             className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${
-                              reg.paymentVerified && reg.checkedIn
+                              reg.paymentVerified
                                 ? "border-emerald-200 bg-emerald-50 text-emerald-800"
                                 : "border-admin-border bg-admin-elevated text-admin-muted"
                             }`}
                           >
                             {eventDayVerificationLabel(reg)}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4">
+                          <span
+                            className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${
+                              reg.checkedIn
+                                ? "border-sky-200 bg-sky-50 text-sky-800"
+                                : "border-admin-border bg-admin-elevated text-admin-muted"
+                            }`}
+                          >
+                            {reg.checkedIn ? "Present" : "Not present"}
                           </span>
                           <p className="mt-2 text-xs text-admin-muted">
                             {reg.checkedInAt
@@ -398,27 +424,40 @@ export function EventDayOperations() {
                         </td>
                         <td className="px-5 py-4">
                           <div className="flex flex-wrap justify-end gap-2">
-                            {reg.paymentVerified && reg.checkedIn ? (
+                            {reg.paymentVerified ? (
                               <button
                                 type="button"
                                 disabled={disabled}
-                                onClick={() => undoPaidFullCheckIn(reg)}
+                                onClick={() => undoPaidFull(reg)}
                                 className="inline-flex items-center gap-1.5 rounded-sm border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-heading uppercase tracking-[0.12em] text-amber-800 disabled:opacity-50"
                               >
                                 <XCircle className="h-3.5 w-3.5" />
-                                Undo
+                                Undo paid
                               </button>
                             ) : (
                               <button
                                 type="button"
                                 disabled={disabled}
-                                onClick={() => void paidFullCheckIn(reg)}
+                                onClick={() => void markPaidFull(reg)}
                                 className="inline-flex items-center gap-1.5 rounded-sm border border-gold/40 bg-gold px-3 py-2 text-xs font-heading uppercase tracking-[0.12em] text-obsidian hover:bg-gold-bright disabled:opacity-50"
                               >
                                 <CheckCircle2 className="h-3.5 w-3.5" />
-                                Paid full · Check in
+                                Paid full
                               </button>
                             )}
+                            <button
+                              type="button"
+                              disabled={disabled}
+                              onClick={() => toggleCheckIn(reg)}
+                              className={`inline-flex items-center gap-1.5 rounded-sm border px-3 py-2 text-xs font-heading uppercase tracking-[0.12em] disabled:opacity-50 ${
+                                reg.checkedIn
+                                  ? "border-admin-border bg-admin-elevated text-admin-muted"
+                                  : "border-sky-200 bg-sky-50 text-sky-800"
+                              }`}
+                            >
+                              <UserCheck className="h-3.5 w-3.5" />
+                              {reg.checkedIn ? "Undo Check In" : "Check In"}
+                            </button>
                           </div>
                         </td>
                       </tr>

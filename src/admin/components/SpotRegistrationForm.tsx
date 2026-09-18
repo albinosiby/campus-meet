@@ -33,7 +33,8 @@ export function SpotRegistrationForm({
   const [amountPaid, setAmountPaid] = useState(String(REGISTRATION_FEE));
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
   const [transactionId, setTransactionId] = useState("");
-  const [paidFullCheckIn, setPaidFullCheckIn] = useState(false);
+  const [paidFull, setPaidFull] = useState(false);
+  const [checkIn, setCheckIn] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -53,7 +54,7 @@ export function SpotRegistrationForm({
       setError(`Amount must be between 0 and ${REGISTRATION_FEE}.`);
       return;
     }
-    if (hasPayment && paymentMethod === "upi" && !paidFullCheckIn) {
+    if (hasPayment && paymentMethod === "upi" && !paidFull) {
       const txnError = upiTransactionIdError(transactionId);
       if (txnError) {
         setError(txnError);
@@ -66,7 +67,7 @@ export function SpotRegistrationForm({
     const now = new Date().toISOString();
     const useUpi =
       paymentMethod === "upi" && !upiTransactionIdError(transactionId);
-    const txn = paidFullCheckIn
+    const txn = paidFull
       ? useUpi
         ? transactionId.trim()
         : cashTransactionId()
@@ -75,7 +76,7 @@ export function SpotRegistrationForm({
         : paymentMethod === "cash"
           ? cashTransactionId()
           : transactionId.trim();
-    const paidAmount = paidFullCheckIn
+    const paidAmount = paidFull
       ? REGISTRATION_FEE
       : hasPayment
         ? amount
@@ -111,10 +112,10 @@ export function SpotRegistrationForm({
         paymentVerified: false,
         paymentVerifiedAt: "",
         verifiedAmount: 0,
-        checkedIn: false,
-        checkedInAt: "",
+        checkedIn: checkIn,
+        checkedInAt: checkIn ? now : "",
       });
-      const registration = paidFullCheckIn
+      const registration = paidFull
         ? await markPaidFullCheckIn(created.id)
         : created;
       onCreated(registration);
@@ -274,10 +275,18 @@ export function SpotRegistrationForm({
           <label className="inline-flex items-center gap-2">
             <input
               type="checkbox"
-              checked={paidFullCheckIn}
-              onChange={(e) => setPaidFullCheckIn(e.target.checked)}
+              checked={paidFull}
+              onChange={(e) => setPaidFull(e.target.checked)}
             />
-            Paid full · Check in after save
+            Paid full after save
+          </label>
+          <label className="inline-flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={checkIn}
+              onChange={(e) => setCheckIn(e.target.checked)}
+            />
+            Check in now
           </label>
         </div>
       </div>

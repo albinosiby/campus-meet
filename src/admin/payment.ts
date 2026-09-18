@@ -34,7 +34,7 @@ export function normalizePayments(
     return payments
       .map((entry) => {
         const row = entry as Partial<PaymentRecord>;
-        return {
+        return paymentForWrite({
           amount: Number(row.amount ?? 0),
           transactionId: String(row.transactionId ?? "").trim(),
           paidAt:
@@ -48,7 +48,7 @@ export function normalizePayments(
               ? row.source
               : undefined,
           method: inferPaymentMethod(row),
-        };
+        });
       })
       .filter((payment) => payment.amount > 0 && payment.transactionId.length >= 8);
   }
@@ -84,17 +84,38 @@ export function createPaymentRecord(input: {
   const method =
     input.method ??
     (input.transactionId.trim().startsWith("CASH-") ? "cash" : "upi");
-  return {
+  return paymentForWrite({
     amount: input.amount,
     transactionId: input.transactionId.trim(),
     paidAt: input.paidAt ?? new Date().toISOString(),
     source: input.source,
     method,
-  };
+  });
 }
 
 export function cashTransactionId(): string {
   return `CASH-${Date.now()}`;
+}
+
+/** Firestore rejects `undefined` values, so omit empty optional fields. */
+export function paymentForWrite(payment: PaymentRecord): PaymentRecord {
+  const method =
+    payment.method ??
+    (payment.transactionId.startsWith("CASH-") ? "cash" : "upi");
+  const record: PaymentRecord = {
+    amount: payment.amount,
+    transactionId: payment.transactionId,
+    paidAt: payment.paidAt,
+    method,
+  };
+  if (
+    payment.source === "register" ||
+    payment.source === "payment" ||
+    payment.source === "admin"
+  ) {
+    record.source = payment.source;
+  }
+  return record;
 }
 
 /** NPCI UTR / UPI Ref is typically 12 digits; some apps show a slightly longer id. */
@@ -163,9 +184,7 @@ export function paymentProgressLabel(reg: Registration): string {
 
 /** Event-day desk verification — independent of online/register status. */
 export function eventDayVerificationLabel(reg: Registration): string {
-  return reg.paymentVerified && reg.checkedIn
-    ? "Paid full · Checked in"
-    : "Waiting";
+  return reg.paymentVerified ? "Paid full" : "Not paid full";
 }
 
 export function derivePaymentStatus(amountPaid: number): PaymentStatus {

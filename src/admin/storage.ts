@@ -25,6 +25,7 @@ import {
   derivePaymentStatus,
   isFullyPaid,
   normalizePayments,
+  paymentForWrite,
   REGISTRATION_FEE,
   sumPayments,
   upiTransactionIdError,
@@ -205,7 +206,7 @@ export async function addRegistration(
     dietary: input.dietary || null,
     amount,
     transactionId: payments[payments.length - 1]?.transactionId ?? "",
-    payments,
+    payments: payments.map(paymentForWrite),
     paymentStatus: input.paymentStatus || derivePaymentStatus(amount),
     paymentVerified: Boolean(input.paymentVerified),
     paymentVerifiedAt: input.paymentVerifiedAt ?? "",
@@ -292,7 +293,7 @@ export async function updateEventDayStatus(
   await updateDoc(doc(getFirebaseDb(), REGISTRATIONS_COLLECTION, id), payload);
 }
 
-/** Event desk: mark paid ₹950, present, and verified. */
+/** Event desk: set paid amount to ₹950 and mark paid full. Does not check in. */
 export async function markPaidFullCheckIn(
   id: string
 ): Promise<Registration> {
@@ -317,15 +318,13 @@ export async function markPaidFullCheckIn(
   }
 
   const payload = {
-    payments,
+    payments: payments.map(paymentForWrite),
     amount: REGISTRATION_FEE,
     transactionId,
     paymentStatus: "paid" as PaymentStatus,
     paymentVerified: true,
     paymentVerifiedAt: now,
     verifiedAmount: REGISTRATION_FEE,
-    checkedIn: true,
-    checkedInAt: now,
   };
 
   await updateDoc(doc(getFirebaseDb(), REGISTRATIONS_COLLECTION, id), payload);
@@ -417,7 +416,7 @@ export async function appendRegistrationPayment(
   const totalPaid = sumPayments(payments);
 
   await updateDoc(doc(getFirebaseDb(), REGISTRATIONS_COLLECTION, id), {
-    payments,
+    payments: payments.map(paymentForWrite),
     amount: totalPaid,
     transactionId: txn,
     paymentStatus: "pending" as PaymentStatus,
@@ -486,7 +485,7 @@ export async function appendAdminPayment(
   const totalPaid = sumPayments(payments);
 
   await updateDoc(doc(getFirebaseDb(), REGISTRATIONS_COLLECTION, id), {
-    payments,
+    payments: payments.map(paymentForWrite),
     amount: totalPaid,
     transactionId: nextPayment.transactionId,
     paymentStatus: "pending" as PaymentStatus,
