@@ -37,12 +37,36 @@ export interface Registration {
   /** Latest transaction ID (convenience / legacy). */
   transactionId: string;
   paymentStatus: PaymentStatus;
+  paymentVerified: boolean;
+  paymentVerifiedAt?: string;
+  verifiedAmount?: number;
+  checkedIn: boolean;
+  checkedInAt?: string;
   /** Chronological payment installments. */
   payments: PaymentRecord[];
   createdAt: string;
 }
 
-export type RegistrationInput = Omit<Registration, "id" | "createdAt">;
+export type RegistrationInput = Omit<
+  Registration,
+  | "id"
+  | "createdAt"
+  | "paymentVerified"
+  | "paymentVerifiedAt"
+  | "verifiedAmount"
+  | "checkedIn"
+  | "checkedInAt"
+> &
+  Partial<
+    Pick<
+      Registration,
+      | "paymentVerified"
+      | "paymentVerifiedAt"
+      | "verifiedAmount"
+      | "checkedIn"
+      | "checkedInAt"
+    >
+  >;
 
 export interface ChartSlice {
   key: string;

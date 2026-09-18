@@ -1,6 +1,14 @@
 import type { Registration } from "../types";
 
-type SeedRegistration = Omit<Registration, "payments">;
+type SeedRegistration = Omit<
+  Registration,
+  | "payments"
+  | "paymentVerified"
+  | "paymentVerifiedAt"
+  | "verifiedAmount"
+  | "checkedIn"
+  | "checkedInAt"
+>;
 
 /** Realistic demo registrations so the admin dashboard has data to visualize. */
 const RAW_SEED_REGISTRATIONS: SeedRegistration[] = [
@@ -417,6 +425,12 @@ const RAW_SEED_REGISTRATIONS: SeedRegistration[] = [
 export const SEED_REGISTRATIONS: Registration[] = RAW_SEED_REGISTRATIONS.map(
   (registration) => ({
     ...registration,
+    paymentVerified: registration.paymentStatus === "paid",
+    paymentVerifiedAt: "",
+    verifiedAmount:
+      registration.paymentStatus === "paid" ? registration.amount : 0,
+    checkedIn: false,
+    checkedInAt: "",
     payments:
       registration.amount > 0
         ? [

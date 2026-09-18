@@ -64,11 +64,29 @@ service cloud.firestore {
 
     function isAdminPaymentUpdate() {
       return request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['paymentStatus', 'amount', 'transactionId', 'payments'])
+            .hasOnly([
+              'paymentStatus', 'amount', 'transactionId', 'payments',
+              'paymentVerified', 'paymentVerifiedAt', 'verifiedAmount',
+              'checkedIn', 'checkedInAt'
+            ])
         && request.resource.data.paymentStatus in ['paid', 'unpaid', 'pending']
-        && request.resource.data.amount is number
-        && request.resource.data.amount >= 0
-        && request.resource.data.transactionId is string
+        && (!request.resource.data.keys().hasAny(['amount'])
+          || (request.resource.data.amount is number
+            && request.resource.data.amount >= 0))
+        && (!request.resource.data.keys().hasAny(['transactionId'])
+          || request.resource.data.transactionId is string)
+        && (!request.resource.data.keys().hasAny(['paymentVerified'])
+          || request.resource.data.paymentVerified is bool)
+        && (!request.resource.data.keys().hasAny(['paymentVerifiedAt'])
+          || request.resource.data.paymentVerifiedAt is string)
+        && (!request.resource.data.keys().hasAny(['verifiedAmount'])
+          || (request.resource.data.verifiedAmount is number
+            && request.resource.data.verifiedAmount >= 0
+            && request.resource.data.verifiedAmount <= 950))
+        && (!request.resource.data.keys().hasAny(['checkedIn'])
+          || request.resource.data.checkedIn is bool)
+        && (!request.resource.data.keys().hasAny(['checkedInAt'])
+          || request.resource.data.checkedInAt is string)
         && (
           !request.resource.data.keys().hasAny(['payments'])
           || request.resource.data.payments is list

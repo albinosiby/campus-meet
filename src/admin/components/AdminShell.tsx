@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import { LogOut } from "lucide-react";
 import { isAdminAuthenticated, logoutAdmin } from "@/admin/auth";
@@ -71,14 +72,28 @@ export function AdminShell({ children, title, subtitle }: AdminShellProps) {
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="inline-flex items-center gap-2 rounded-sm border border-admin-border bg-admin-surface px-3 py-2 text-xs font-heading uppercase tracking-[0.16em] text-admin-muted transition-colors hover:border-gold/40 hover:text-admin-ink"
-          >
-            <LogOut className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Logout</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/dashboard/"
+              className="hidden rounded-sm border border-admin-border bg-admin-surface px-3 py-2 text-xs font-heading uppercase tracking-[0.14em] text-admin-muted transition-colors hover:border-gold/40 hover:text-admin-ink md:inline-flex"
+            >
+              Dashboard
+            </Link>
+            <Link
+              href="/dashboard/event-day/"
+              className="inline-flex rounded-sm border border-gold/35 bg-gold/10 px-3 py-2 text-xs font-heading uppercase tracking-[0.14em] text-admin-ink transition-colors hover:border-gold/60 hover:bg-gold/20"
+            >
+              Event Desk
+            </Link>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="inline-flex items-center gap-2 rounded-sm border border-admin-border bg-admin-surface px-3 py-2 text-xs font-heading uppercase tracking-[0.16em] text-admin-muted transition-colors hover:border-gold/40 hover:text-admin-ink"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Logout</span>
+            </button>
+          </div>
         </div>
       </header>
 
