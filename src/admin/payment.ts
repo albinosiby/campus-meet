@@ -163,7 +163,9 @@ export function paymentProgressLabel(reg: Registration): string {
 
 /** Event-day desk verification — independent of online/register status. */
 export function eventDayVerificationLabel(reg: Registration): string {
-  return reg.paymentVerified ? "Spot verified" : "Not spot-verified";
+  return reg.paymentVerified && reg.checkedIn
+    ? "Paid full · Checked in"
+    : "Waiting";
 }
 
 export function derivePaymentStatus(amountPaid: number): PaymentStatus {

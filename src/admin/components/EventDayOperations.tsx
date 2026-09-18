@@ -5,23 +5,20 @@ import { motion } from "framer-motion";
 import {
   Banknote,
   CheckCircle2,
-  Clock3,
-  CreditCard,
   RefreshCcw,
   Search,
   Smartphone,
-  UserCheck,
   UserPlus,
   Users,
   XCircle,
 } from "lucide-react";
-import { buildDashboardStats, formatCurrency } from "@/admin/analytics";
+import { buildDashboardStats } from "@/admin/analytics";
 import { ZONE_LABELS } from "@/admin/constants";
 import {
   amountRemaining,
+  derivePaymentStatus,
   eventDayVerificationLabel,
-  isCashPayment,
-  paymentMethodLabel,
+  REGISTRATION_FEE,
   sanitizeUpiTransactionIdInput,
   upiTransactionIdError,
 } from "@/admin/payment";
@@ -40,8 +37,8 @@ type EventFilter =
   | "all"
   | "present"
   | "not-present"
-  | "spot-verified"
-  | "need-spot-verify"
+  | "paid-full"
+  | "waiting"
   | "unpaid";
 
 function formatDateTime(value?: string): string {
@@ -81,8 +78,8 @@ function personMatchesSearch(reg: Registration, query: string): boolean {
 function statusMatchesFilter(reg: Registration, filter: EventFilter): boolean {
   if (filter === "present") return reg.checkedIn;
   if (filter === "not-present") return !reg.checkedIn;
-  if (filter === "spot-verified") return reg.paymentVerified;
-  if (filter === "need-spot-verify") return !reg.paymentVerified;
+  if (filter === "paid-full") return reg.paymentVerified && reg.checkedIn;
+  if (filter === "waiting") return !(reg.paymentVerified && reg.checkedIn);
   if (filter === "unpaid") return reg.amount <= 0;
   return true;
 }
@@ -161,17 +158,13 @@ export function EventDayOperations() {
   }, [registrations, query, zoneFilter, eventFilter]);
 
   const stats = useMemo(() => buildDashboardStats(filtered), [filtered]);
-  const checkedInCount = registrations.filter((reg) => reg.checkedIn).length;
-  const filteredCheckedIn = filtered.filter((reg) => reg.checkedIn).length;
-  const spotVerifiedCount = registrations.filter(
-    (reg) => reg.paymentVerified
+  const paidFullCount = registrations.filter(
+    (reg) => reg.paymentVerified && reg.checkedIn
   ).length;
-  const needSpotVerifyCount = registrations.filter(
-    (reg) => !reg.paymentVerified
+  const waitingCount = registrations.length - paidFullCount;
+  const filteredPaidFull = filtered.filter(
+    (reg) => reg.paymentVerified && reg.checkedIn
   ).length;
-  const totalCollected = registrations
-    .filter((reg) => reg.paymentVerified)
-    .reduce((sum, reg) => sum + (reg.verifiedAmount ?? reg.amount ?? 0), 0);
 
   async function patchRegistration(
     id: string,
@@ -203,47 +196,29 @@ export function EventDayOperations() {
     setPayError("");
   }
 
-  function spotVerify(reg: Registration) {
+  function paidFullCheckIn(reg: Registration) {
     const now = new Date().toISOString();
-    void patchRegistration(
-      reg.id,
-      {
-        paymentVerified: true,
-        paymentVerifiedAt: now,
-        verifiedAmount: reg.amount,
-      },
-      {
-        paymentVerified: true,
-        paymentVerifiedAt: now,
-        verifiedAmount: reg.amount,
-      }
-    );
+    const patch = {
+      paymentVerified: true,
+      paymentVerifiedAt: now,
+      verifiedAmount: REGISTRATION_FEE,
+      checkedIn: true,
+      checkedInAt: now,
+      paymentStatus: "paid" as const,
+    };
+    void patchRegistration(reg.id, patch, patch);
   }
 
-  function undoSpotVerify(reg: Registration) {
-    void patchRegistration(
-      reg.id,
-      {
-        paymentVerified: false,
-        paymentVerifiedAt: "",
-        verifiedAmount: 0,
-      },
-      {
-        paymentVerified: false,
-        paymentVerifiedAt: "",
-        verifiedAmount: 0,
-      }
-    );
-  }
-
-  function toggleCheckIn(reg: Registration) {
-    const checkedIn = !reg.checkedIn;
-    const checkedInAt = checkedIn ? new Date().toISOString() : "";
-    void patchRegistration(
-      reg.id,
-      { checkedIn, checkedInAt },
-      { checkedIn, checkedInAt }
-    );
+  function undoPaidFullCheckIn(reg: Registration) {
+    const patch = {
+      paymentVerified: false,
+      paymentVerifiedAt: "",
+      verifiedAmount: 0,
+      checkedIn: false,
+      checkedInAt: "",
+      paymentStatus: derivePaymentStatus(reg.amount),
+    };
+    void patchRegistration(reg.id, patch, patch);
   }
 
   async function submitEventDayPayment(reg: Registration) {
@@ -291,7 +266,7 @@ export function EventDayOperations() {
     <AdminShell
       wide
       title="Event Day Desk"
-      subtitle="Spot register walk-ins, collect remaining fee, spot-verify, and check in"
+      subtitle="Spot register walk-ins, mark paid full, and check in"
     >
       {!loaded ? (
         <div className="flex h-64 items-center justify-center">
@@ -322,7 +297,7 @@ export function EventDayOperations() {
             />
           ) : null}
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <SummaryCard
               label="Total Registered"
               value={registrations.length}
@@ -330,28 +305,16 @@ export function EventDayOperations() {
               icon={Users}
             />
             <SummaryCard
-              label="Checked In"
-              value={checkedInCount}
-              helper={`${Math.max(0, registrations.length - checkedInCount)} not present`}
-              icon={UserCheck}
-            />
-            <SummaryCard
-              label="Spot Verified"
-              value={spotVerifiedCount}
-              helper="Verified at event desk"
+              label="Paid Full · Check In"
+              value={paidFullCount}
+              helper="Paid full and present"
               icon={CheckCircle2}
             />
             <SummaryCard
-              label="Need Spot Verify"
-              value={needSpotVerifyCount}
-              helper="Not yet verified here"
-              icon={Clock3}
-            />
-            <SummaryCard
-              label="Spot Collected"
-              value={formatCurrency(totalCollected)}
-              helper="Amount on spot-verified records"
-              icon={CreditCard}
+              label="Waiting"
+              value={waitingCount}
+              helper="Not yet paid full check-in"
+              icon={Users}
             />
           </div>
 
@@ -363,11 +326,11 @@ export function EventDayOperations() {
                     Event-day payment desk
                   </p>
                   <h2 className="mt-2 font-heading text-xl font-bold text-admin-ink">
-                    Find person, update payment, spot-verify
+                    Find person, paid full check-in
                   </h2>
                   <p className="mt-1 text-sm text-admin-muted">
-                    Spot verify is a new event-day status. Showing{" "}
-                    {filtered.length} · Present in this view: {filteredCheckedIn}
+                    Showing {filtered.length} · Paid full check-in in this view:{" "}
+                    {filteredPaidFull}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -429,25 +392,23 @@ export function EventDayOperations() {
                   className="rounded-sm border border-admin-border bg-admin-elevated px-3 py-3 text-sm text-admin-ink focus:border-gold/50 focus:outline-none"
                 >
                   <option value="all">All people</option>
+                  <option value="paid-full">Paid full check-in</option>
+                  <option value="waiting">Waiting</option>
                   <option value="present">Checked in</option>
                   <option value="not-present">Not present</option>
-                  <option value="spot-verified">Spot verified</option>
-                  <option value="need-spot-verify">Need spot verify</option>
                   <option value="unpaid">No payment yet</option>
                 </select>
               </div>
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[980px] table-auto text-left text-sm">
+              <table className="w-full min-w-[860px] table-auto text-left text-sm">
                 <thead>
                   <tr className="border-b border-admin-border bg-admin-elevated text-[11px] font-heading uppercase tracking-[0.14em] text-admin-muted">
                     <th className="px-5 py-3">Person</th>
                     <th className="px-4 py-3">Contact</th>
                     <th className="px-4 py-3">College</th>
-                    <th className="px-4 py-3">Paid</th>
-                    <th className="px-4 py-3">Spot verify</th>
-                    <th className="px-4 py-3">Check In</th>
+                    <th className="px-4 py-3">Paid full / Check in</th>
                     <th className="px-5 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
@@ -485,65 +446,19 @@ export function EventDayOperations() {
                           </p>
                         </td>
                         <td className="px-4 py-4">
-                          <p className="font-heading font-semibold text-admin-ink">
-                            {formatCurrency(reg.amount)}
-                          </p>
-                          <p className="mt-1 text-xs text-admin-muted">
-                            {remaining > 0
-                              ? `${formatCurrency(remaining)} remaining`
-                              : "Full amount paid"}
-                          </p>
-                          {reg.payments.length > 0 ? (
-                            <ul className="mt-2 space-y-1">
-                              {reg.payments.map((payment, index) => (
-                                <li
-                                  key={`${payment.transactionId}-${index}`}
-                                  className="text-[11px] text-admin-muted"
-                                >
-                                  {formatCurrency(payment.amount)} ·{" "}
-                                  {paymentMethodLabel(payment)}
-                                  {!isCashPayment(payment)
-                                    ? ` · ${payment.transactionId}`
-                                    : ""}
-                                </li>
-                              ))}
-                            </ul>
-                          ) : null}
-                        </td>
-                        <td className="px-4 py-4">
                           <span
                             className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${
-                              reg.paymentVerified
-                                ? "border-sky-200 bg-sky-50 text-sky-800"
+                              reg.paymentVerified && reg.checkedIn
+                                ? "border-emerald-200 bg-emerald-50 text-emerald-800"
                                 : "border-admin-border bg-admin-elevated text-admin-muted"
                             }`}
                           >
                             {eventDayVerificationLabel(reg)}
                           </span>
-                          {reg.paymentVerifiedAt ? (
-                            <p className="mt-2 text-[11px] text-admin-muted">
-                              {formatDateTime(reg.paymentVerifiedAt)}
-                            </p>
-                          ) : (
-                            <p className="mt-2 text-xs text-admin-muted">
-                              Desk has not verified yet
-                            </p>
-                          )}
-                        </td>
-                        <td className="px-4 py-4">
-                          <span
-                            className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${
-                              reg.checkedIn
-                                ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                                : "border-admin-border bg-admin-elevated text-admin-muted"
-                            }`}
-                          >
-                            {reg.checkedIn ? "Present" : "Not present"}
-                          </span>
                           <p className="mt-2 text-xs text-admin-muted">
                             {reg.checkedInAt
                               ? formatDateTime(reg.checkedInAt)
-                              : "No check-in time"}
+                              : "Not checked in yet"}
                           </p>
                         </td>
                         <td className="px-5 py-4">
@@ -563,40 +478,27 @@ export function EventDayOperations() {
                                   {showPayForm ? "Close" : "Add payment"}
                                 </button>
                               ) : null}
-                              {reg.paymentVerified ? (
+                              {reg.paymentVerified && reg.checkedIn ? (
                                 <button
                                   type="button"
                                   disabled={disabled}
-                                  onClick={() => undoSpotVerify(reg)}
+                                  onClick={() => undoPaidFullCheckIn(reg)}
                                   className="inline-flex items-center gap-1.5 rounded-sm border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-heading uppercase tracking-[0.12em] text-amber-800 disabled:opacity-50"
                                 >
                                   <XCircle className="h-3.5 w-3.5" />
-                                  Undo spot
+                                  Undo
                                 </button>
                               ) : (
                                 <button
                                   type="button"
-                                  disabled={disabled || reg.amount <= 0}
-                                  onClick={() => spotVerify(reg)}
-                                  className="inline-flex items-center gap-1.5 rounded-sm border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-heading uppercase tracking-[0.12em] text-sky-800 disabled:cursor-not-allowed disabled:opacity-50"
+                                  disabled={disabled}
+                                  onClick={() => paidFullCheckIn(reg)}
+                                  className="inline-flex items-center gap-1.5 rounded-sm border border-gold/40 bg-gold px-3 py-2 text-xs font-heading uppercase tracking-[0.12em] text-obsidian hover:bg-gold-bright disabled:opacity-50"
                                 >
                                   <CheckCircle2 className="h-3.5 w-3.5" />
-                                  Spot verify
+                                  Paid full · Check in
                                 </button>
                               )}
-                              <button
-                                type="button"
-                                disabled={disabled}
-                                onClick={() => toggleCheckIn(reg)}
-                                className={`inline-flex items-center gap-1.5 rounded-sm border px-3 py-2 text-xs font-heading uppercase tracking-[0.12em] disabled:opacity-50 ${
-                                  reg.checkedIn
-                                    ? "border-admin-border bg-admin-elevated text-admin-muted"
-                                    : "border-gold/40 bg-gold text-obsidian hover:bg-gold-bright"
-                                }`}
-                              >
-                                <UserCheck className="h-3.5 w-3.5" />
-                                {reg.checkedIn ? "Undo Check In" : "Check In"}
-                              </button>
                             </div>
 
                             {showPayForm && remaining > 0 ? (

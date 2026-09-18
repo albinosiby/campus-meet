@@ -33,8 +33,7 @@ export function SpotRegistrationForm({
   const [amountPaid, setAmountPaid] = useState(String(REGISTRATION_FEE));
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
   const [transactionId, setTransactionId] = useState("");
-  const [spotVerify, setSpotVerify] = useState(false);
-  const [checkIn, setCheckIn] = useState(true);
+  const [paidFullCheckIn, setPaidFullCheckIn] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -85,7 +84,9 @@ export function SpotRegistrationForm({
         dietary: null,
         amount: hasPayment ? amount : 0,
         transactionId: txn,
-        paymentStatus: derivePaymentStatus(hasPayment ? amount : 0),
+        paymentStatus: paidFullCheckIn
+          ? "paid"
+          : derivePaymentStatus(hasPayment ? amount : 0),
         payments: hasPayment
           ? [
               {
@@ -97,11 +98,11 @@ export function SpotRegistrationForm({
               },
             ]
           : [],
-        paymentVerified: hasPayment && spotVerify,
-        paymentVerifiedAt: hasPayment && spotVerify ? now : "",
-        verifiedAmount: hasPayment && spotVerify ? amount : 0,
-        checkedIn: checkIn,
-        checkedInAt: checkIn ? now : "",
+        paymentVerified: paidFullCheckIn,
+        paymentVerifiedAt: paidFullCheckIn ? now : "",
+        verifiedAmount: paidFullCheckIn ? REGISTRATION_FEE : 0,
+        checkedIn: paidFullCheckIn,
+        checkedInAt: paidFullCheckIn ? now : "",
       });
       onCreated(registration);
     } catch (err) {
@@ -260,18 +261,10 @@ export function SpotRegistrationForm({
           <label className="inline-flex items-center gap-2">
             <input
               type="checkbox"
-              checked={spotVerify}
-              onChange={(e) => setSpotVerify(e.target.checked)}
+              checked={paidFullCheckIn}
+              onChange={(e) => setPaidFullCheckIn(e.target.checked)}
             />
-            Spot verify after save
-          </label>
-          <label className="inline-flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={checkIn}
-              onChange={(e) => setCheckIn(e.target.checked)}
-            />
-            Check in now
+            Paid full · Check in after save
           </label>
         </div>
       </div>
