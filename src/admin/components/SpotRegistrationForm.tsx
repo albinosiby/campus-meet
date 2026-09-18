@@ -10,7 +10,7 @@ import {
   sanitizeUpiTransactionIdInput,
   upiTransactionIdError,
 } from "@/admin/payment";
-import { addRegistration } from "@/admin/storage";
+import { addRegistration, markPaidFullCheckIn } from "@/admin/storage";
 import type { Gender, PaymentMethod, Registration, Zone } from "@/admin/types";
 
 const fieldClass =
@@ -53,7 +53,7 @@ export function SpotRegistrationForm({
       setError(`Amount must be between 0 and ${REGISTRATION_FEE}.`);
       return;
     }
-    if (hasPayment && paymentMethod === "upi") {
+    if (hasPayment && paymentMethod === "upi" && !paidFullCheckIn) {
       const txnError = upiTransactionIdError(transactionId);
       if (txnError) {
         setError(txnError);
@@ -64,14 +64,25 @@ export function SpotRegistrationForm({
     setSubmitting(true);
     setError("");
     const now = new Date().toISOString();
-    const txn = !hasPayment
-      ? ""
-      : paymentMethod === "cash"
-        ? cashTransactionId()
-        : transactionId.trim();
+    const useUpi =
+      paymentMethod === "upi" && !upiTransactionIdError(transactionId);
+    const txn = paidFullCheckIn
+      ? useUpi
+        ? transactionId.trim()
+        : cashTransactionId()
+      : !hasPayment
+        ? ""
+        : paymentMethod === "cash"
+          ? cashTransactionId()
+          : transactionId.trim();
+    const paidAmount = paidFullCheckIn
+      ? REGISTRATION_FEE
+      : hasPayment
+        ? amount
+        : 0;
 
     try {
-      const registration = await addRegistration({
+      const created = await addRegistration({
         fullName: fullName.trim(),
         email: null,
         phone: phone.trim(),
@@ -82,28 +93,30 @@ export function SpotRegistrationForm({
         zone,
         diocese: null,
         dietary: null,
-        amount: hasPayment ? amount : 0,
+        amount: paidAmount,
         transactionId: txn,
-        paymentStatus: paidFullCheckIn
-          ? "paid"
-          : derivePaymentStatus(hasPayment ? amount : 0),
-        payments: hasPayment
-          ? [
-              {
-                amount,
-                transactionId: txn,
-                paidAt: now,
-                source: "admin",
-                method: paymentMethod,
-              },
-            ]
-          : [],
-        paymentVerified: paidFullCheckIn,
-        paymentVerifiedAt: paidFullCheckIn ? now : "",
-        verifiedAmount: paidFullCheckIn ? REGISTRATION_FEE : 0,
-        checkedIn: paidFullCheckIn,
-        checkedInAt: paidFullCheckIn ? now : "",
+        paymentStatus: derivePaymentStatus(paidAmount),
+        payments:
+          paidAmount > 0
+            ? [
+                {
+                  amount: paidAmount,
+                  transactionId: txn,
+                  paidAt: now,
+                  source: "admin",
+                  method: useUpi ? "upi" : "cash",
+                },
+              ]
+            : [],
+        paymentVerified: false,
+        paymentVerifiedAt: "",
+        verifiedAmount: 0,
+        checkedIn: false,
+        checkedInAt: "",
       });
+      const registration = paidFullCheckIn
+        ? await markPaidFullCheckIn(created.id)
+        : created;
       onCreated(registration);
     } catch (err) {
       setError(

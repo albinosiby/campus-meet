@@ -25,6 +25,7 @@ import {
   derivePaymentStatus,
   isFullyPaid,
   normalizePayments,
+  REGISTRATION_FEE,
   sumPayments,
   upiTransactionIdError,
 } from "./payment";
@@ -289,6 +290,50 @@ export async function updateEventDayStatus(
   if (Object.keys(payload).length === 0) return;
 
   await updateDoc(doc(getFirebaseDb(), REGISTRATIONS_COLLECTION, id), payload);
+}
+
+/** Event desk: mark paid ₹950, present, and verified. */
+export async function markPaidFullCheckIn(
+  id: string
+): Promise<Registration> {
+  const current = await getRegistrationById(id);
+  if (!current) throw new Error("Registration not found.");
+
+  const now = new Date().toISOString();
+  const remaining = amountRemaining(current.amount);
+  let payments = current.payments;
+  let transactionId = current.transactionId;
+
+  if (remaining > 0) {
+    const nextPayment = createPaymentRecord({
+      amount: remaining,
+      transactionId: cashTransactionId(),
+      source: "admin",
+      method: "cash",
+      paidAt: now,
+    });
+    payments = [...current.payments, nextPayment];
+    transactionId = nextPayment.transactionId;
+  }
+
+  const payload = {
+    payments,
+    amount: REGISTRATION_FEE,
+    transactionId,
+    paymentStatus: "paid" as PaymentStatus,
+    paymentVerified: true,
+    paymentVerifiedAt: now,
+    verifiedAmount: REGISTRATION_FEE,
+    checkedIn: true,
+    checkedInAt: now,
+  };
+
+  await updateDoc(doc(getFirebaseDb(), REGISTRATIONS_COLLECTION, id), payload);
+
+  return {
+    ...current,
+    ...payload,
+  };
 }
 
 export interface PaymentUpdateInput {

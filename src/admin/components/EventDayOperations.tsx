@@ -2,32 +2,19 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import {
-  Banknote,
-  CheckCircle2,
-  RefreshCcw,
-  Search,
-  Smartphone,
-  UserPlus,
-  Users,
-  XCircle,
-} from "lucide-react";
+import { CheckCircle2, RefreshCcw, Search, UserPlus, Users, XCircle } from "lucide-react";
 import { buildDashboardStats } from "@/admin/analytics";
 import { ZONE_LABELS } from "@/admin/constants";
 import {
-  amountRemaining,
   derivePaymentStatus,
   eventDayVerificationLabel,
-  REGISTRATION_FEE,
-  sanitizeUpiTransactionIdInput,
-  upiTransactionIdError,
 } from "@/admin/payment";
 import {
-  appendAdminPayment,
   getRegistrations,
+  markPaidFullCheckIn,
   updateEventDayStatus,
 } from "@/admin/storage";
-import type { PaymentMethod, Registration, Zone } from "@/admin/types";
+import type { Registration, Zone } from "@/admin/types";
 import { formatPassId } from "@/shared/passId";
 import { AdminShell } from "./AdminShell";
 import { ExportMenu } from "./ExportMenu";
@@ -123,11 +110,6 @@ export function EventDayOperations() {
   const [zoneFilter, setZoneFilter] = useState<Zone | "all">("all");
   const [eventFilter, setEventFilter] = useState<EventFilter>("all");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
-  const [payFormId, setPayFormId] = useState<string | null>(null);
-  const [payAmount, setPayAmount] = useState("");
-  const [payMethod, setPayMethod] = useState<PaymentMethod>("cash");
-  const [payTxn, setPayTxn] = useState("");
-  const [payError, setPayError] = useState("");
   const [showSpotForm, setShowSpotForm] = useState(false);
 
   async function loadRegistrations() {
@@ -188,25 +170,21 @@ export function EventDayOperations() {
     }
   }
 
-  function openPayForm(reg: Registration) {
-    setPayFormId(reg.id);
-    setPayAmount(String(amountRemaining(reg.amount) || ""));
-    setPayMethod("cash");
-    setPayTxn("");
-    setPayError("");
-  }
-
-  function paidFullCheckIn(reg: Registration) {
-    const now = new Date().toISOString();
-    const patch = {
-      paymentVerified: true,
-      paymentVerifiedAt: now,
-      verifiedAmount: REGISTRATION_FEE,
-      checkedIn: true,
-      checkedInAt: now,
-      paymentStatus: "paid" as const,
-    };
-    void patchRegistration(reg.id, patch, patch);
+  async function paidFullCheckIn(reg: Registration) {
+    const previous = registrations;
+    setUpdatingId(reg.id);
+    try {
+      const updated = await markPaidFullCheckIn(reg.id);
+      setRegistrations((rows) =>
+        rows.map((row) => (row.id === reg.id ? updated : row))
+      );
+      setLoadError("");
+    } catch {
+      setRegistrations(previous);
+      setLoadError("Could not update this person. Check Firestore rules.");
+    } finally {
+      setUpdatingId(null);
+    }
   }
 
   function undoPaidFullCheckIn(reg: Registration) {
@@ -219,47 +197,6 @@ export function EventDayOperations() {
       paymentStatus: derivePaymentStatus(reg.amount),
     };
     void patchRegistration(reg.id, patch, patch);
-  }
-
-  async function submitEventDayPayment(reg: Registration) {
-    const remaining = amountRemaining(reg.amount);
-    const amount = Number(payAmount);
-    if (!Number.isFinite(amount) || amount < 1 || amount > remaining) {
-      setPayError(`Enter an amount between 1 and ${remaining}.`);
-      return;
-    }
-    if (payMethod === "upi") {
-      const txnError = upiTransactionIdError(payTxn);
-      if (txnError) {
-        setPayError(txnError);
-        return;
-      }
-    }
-
-    setUpdatingId(reg.id);
-    setPayError("");
-    try {
-      const updated = await appendAdminPayment(
-        reg.id,
-        amount,
-        payMethod === "upi" ? payTxn : undefined,
-        payMethod
-      );
-      setRegistrations((rows) =>
-        rows.map((row) => (row.id === reg.id ? updated : row))
-      );
-      setPayFormId(null);
-      setPayTxn("");
-      setLoadError("");
-    } catch (error) {
-      setPayError(
-        error instanceof Error
-          ? error.message
-          : "Could not add this payment. Try again."
-      );
-    } finally {
-      setUpdatingId(null);
-    }
   }
 
   return (
@@ -414,9 +351,7 @@ export function EventDayOperations() {
                 </thead>
                 <tbody className="divide-y divide-admin-border">
                   {filtered.map((reg) => {
-                    const remaining = amountRemaining(reg.amount);
                     const disabled = updatingId === reg.id;
-                    const showPayForm = payFormId === reg.id;
 
                     return (
                       <tr
@@ -462,117 +397,28 @@ export function EventDayOperations() {
                           </p>
                         </td>
                         <td className="px-5 py-4">
-                          <div className="flex flex-col items-end gap-2">
-                            <div className="flex flex-wrap justify-end gap-2">
-                              {remaining > 0 ? (
-                                <button
-                                  type="button"
-                                  disabled={disabled}
-                                  onClick={() =>
-                                    showPayForm
-                                      ? setPayFormId(null)
-                                      : openPayForm(reg)
-                                  }
-                                  className="inline-flex items-center gap-1.5 rounded-sm border border-gold/40 bg-gold/10 px-3 py-2 text-xs font-heading uppercase tracking-[0.12em] text-admin-ink disabled:opacity-50"
-                                >
-                                  {showPayForm ? "Close" : "Add payment"}
-                                </button>
-                              ) : null}
-                              {reg.paymentVerified && reg.checkedIn ? (
-                                <button
-                                  type="button"
-                                  disabled={disabled}
-                                  onClick={() => undoPaidFullCheckIn(reg)}
-                                  className="inline-flex items-center gap-1.5 rounded-sm border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-heading uppercase tracking-[0.12em] text-amber-800 disabled:opacity-50"
-                                >
-                                  <XCircle className="h-3.5 w-3.5" />
-                                  Undo
-                                </button>
-                              ) : (
-                                <button
-                                  type="button"
-                                  disabled={disabled}
-                                  onClick={() => paidFullCheckIn(reg)}
-                                  className="inline-flex items-center gap-1.5 rounded-sm border border-gold/40 bg-gold px-3 py-2 text-xs font-heading uppercase tracking-[0.12em] text-obsidian hover:bg-gold-bright disabled:opacity-50"
-                                >
-                                  <CheckCircle2 className="h-3.5 w-3.5" />
-                                  Paid full · Check in
-                                </button>
-                              )}
-                            </div>
-
-                            {showPayForm && remaining > 0 ? (
-                              <div className="w-full max-w-sm rounded-sm border border-admin-border bg-admin-elevated p-3">
-                                <p className="text-[10px] font-heading uppercase tracking-[0.14em] text-admin-muted">
-                                  New desk payment
-                                </p>
-                                <div className="mt-2 grid grid-cols-2 gap-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => setPayMethod("cash")}
-                                    className={`inline-flex items-center justify-center gap-1 rounded-sm border px-2 py-1.5 text-[10px] font-heading uppercase tracking-[0.1em] ${
-                                      payMethod === "cash"
-                                        ? "border-gold/50 bg-gold/15 text-admin-ink"
-                                        : "border-admin-border text-admin-muted"
-                                    }`}
-                                  >
-                                    <Banknote className="h-3 w-3" />
-                                    Cash
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => setPayMethod("upi")}
-                                    className={`inline-flex items-center justify-center gap-1 rounded-sm border px-2 py-1.5 text-[10px] font-heading uppercase tracking-[0.1em] ${
-                                      payMethod === "upi"
-                                        ? "border-gold/50 bg-gold/15 text-admin-ink"
-                                        : "border-admin-border text-admin-muted"
-                                    }`}
-                                  >
-                                    <Smartphone className="h-3 w-3" />
-                                    UPI
-                                  </button>
-                                </div>
-                                <input
-                                  type="number"
-                                  min={1}
-                                  max={remaining}
-                                  value={payAmount}
-                                  onChange={(e) => setPayAmount(e.target.value)}
-                                  className="mt-2 w-full rounded-sm border border-admin-border bg-admin-surface px-2 py-1.5 text-sm"
-                                  placeholder={`Amount (max ${remaining})`}
-                                />
-                                {payMethod === "upi" ? (
-                                  <input
-                                    type="text"
-                                    value={payTxn}
-                                    onChange={(e) =>
-                                      setPayTxn(
-                                        sanitizeUpiTransactionIdInput(
-                                          e.target.value
-                                        )
-                                      )
-                                    }
-                                    className="mt-2 w-full rounded-sm border border-admin-border bg-admin-surface px-2 py-1.5 text-sm"
-                                    placeholder="UPI transaction ID"
-                                  />
-                                ) : null}
-                                {payError ? (
-                                  <p className="mt-2 text-[11px] text-red-600">
-                                    {payError}
-                                  </p>
-                                ) : null}
-                                <button
-                                  type="button"
-                                  disabled={disabled}
-                                  onClick={() =>
-                                    void submitEventDayPayment(reg)
-                                  }
-                                  className="mt-2 w-full rounded-sm border border-emerald-300 bg-emerald-600 px-3 py-2 text-[11px] font-heading uppercase tracking-[0.12em] text-white disabled:opacity-50"
-                                >
-                                  Save payment
-                                </button>
-                              </div>
-                            ) : null}
+                          <div className="flex flex-wrap justify-end gap-2">
+                            {reg.paymentVerified && reg.checkedIn ? (
+                              <button
+                                type="button"
+                                disabled={disabled}
+                                onClick={() => undoPaidFullCheckIn(reg)}
+                                className="inline-flex items-center gap-1.5 rounded-sm border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-heading uppercase tracking-[0.12em] text-amber-800 disabled:opacity-50"
+                              >
+                                <XCircle className="h-3.5 w-3.5" />
+                                Undo
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                disabled={disabled}
+                                onClick={() => void paidFullCheckIn(reg)}
+                                className="inline-flex items-center gap-1.5 rounded-sm border border-gold/40 bg-gold px-3 py-2 text-xs font-heading uppercase tracking-[0.12em] text-obsidian hover:bg-gold-bright disabled:opacity-50"
+                              >
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                Paid full · Check in
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
