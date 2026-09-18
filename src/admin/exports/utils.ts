@@ -27,6 +27,11 @@ export const EXPORT_HEADERS = [
   "Transaction IDs",
   "Payment details",
   "Payment Status",
+  "Payment Verified",
+  "Verified Amount (₹)",
+  "Payment Verified At",
+  "Checked In",
+  "Checked In At",
   "Registered At",
 ] as const;
 
@@ -96,6 +101,21 @@ export function registrationToRow(reg: Registration): string[] {
     formatExportTransactionIds(reg),
     formatExportPaymentDetails(reg),
     PAYMENT_STATUS_LABELS[reg.paymentStatus] ?? reg.paymentStatus,
+    reg.paymentVerified ? "Yes" : "No",
+    String(reg.verifiedAmount ?? (reg.paymentVerified ? reg.amount : 0)),
+    reg.paymentVerifiedAt
+      ? new Date(reg.paymentVerifiedAt).toLocaleString("en-IN", {
+          dateStyle: "medium",
+          timeStyle: "short",
+        })
+      : "—",
+    reg.checkedIn ? "Present" : "Not present",
+    reg.checkedInAt
+      ? new Date(reg.checkedInAt).toLocaleString("en-IN", {
+          dateStyle: "medium",
+          timeStyle: "short",
+        })
+      : "—",
     new Date(reg.createdAt).toLocaleString("en-IN", {
       dateStyle: "medium",
       timeStyle: "short",

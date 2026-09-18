@@ -83,6 +83,23 @@ function mapRegistration(
     transactionId:
       payments[payments.length - 1]?.transactionId || transactionId,
     paymentStatus,
+    paymentVerified:
+      typeof data.paymentVerified === "boolean"
+        ? data.paymentVerified
+        : paymentStatus === "paid",
+    paymentVerifiedAt:
+      typeof data.paymentVerifiedAt === "string"
+        ? data.paymentVerifiedAt
+        : undefined,
+    verifiedAmount:
+      typeof data.verifiedAmount === "number"
+        ? data.verifiedAmount
+        : paymentStatus === "paid"
+          ? totalPaid
+          : undefined,
+    checkedIn: Boolean(data.checkedIn),
+    checkedInAt:
+      typeof data.checkedInAt === "string" ? data.checkedInAt : undefined,
     payments,
     createdAt,
   };
@@ -187,6 +204,11 @@ export async function addRegistration(
     transactionId: payments[payments.length - 1]?.transactionId ?? "",
     payments,
     paymentStatus: input.paymentStatus || derivePaymentStatus(amount),
+    paymentVerified: false,
+    paymentVerifiedAt: "",
+    verifiedAmount: 0,
+    checkedIn: false,
+    checkedInAt: "",
     createdAt,
     createdAtServer: serverTimestamp(),
   };
@@ -202,6 +224,11 @@ export async function addRegistration(
     transactionId: payload.transactionId,
     payments,
     paymentStatus: payload.paymentStatus,
+    paymentVerified: payload.paymentVerified,
+    paymentVerifiedAt: payload.paymentVerifiedAt,
+    verifiedAmount: payload.verifiedAmount,
+    checkedIn: payload.checkedIn,
+    checkedInAt: payload.checkedInAt,
     id: docRef.id,
     createdAt,
   };
@@ -213,7 +240,53 @@ export async function updatePaymentStatus(
 ): Promise<void> {
   await updateDoc(doc(getFirebaseDb(), REGISTRATIONS_COLLECTION, id), {
     paymentStatus,
+    paymentVerified: paymentStatus === "paid",
+    paymentVerifiedAt:
+      paymentStatus === "paid" ? new Date().toISOString() : "",
   });
+}
+
+export interface EventDayUpdateInput {
+  paymentStatus?: PaymentStatus;
+  paymentVerified?: boolean;
+  paymentVerifiedAt?: string;
+  verifiedAmount?: number;
+  checkedIn?: boolean;
+  checkedInAt?: string;
+}
+
+/** Admin: update event-day verification/check-in fields on a registration. */
+export async function updateEventDayStatus(
+  id: string,
+  input: EventDayUpdateInput
+): Promise<void> {
+  const payload: Record<string, unknown> = {};
+
+  if (input.paymentStatus) {
+    payload.paymentStatus = input.paymentStatus;
+  }
+  if (typeof input.paymentVerified === "boolean") {
+    payload.paymentVerified = input.paymentVerified;
+  }
+  if (typeof input.paymentVerifiedAt === "string") {
+    payload.paymentVerifiedAt = input.paymentVerifiedAt;
+  }
+  if (typeof input.verifiedAmount === "number") {
+    if (!Number.isFinite(input.verifiedAmount) || input.verifiedAmount < 0) {
+      throw new Error("Enter a valid verified amount.");
+    }
+    payload.verifiedAmount = input.verifiedAmount;
+  }
+  if (typeof input.checkedIn === "boolean") {
+    payload.checkedIn = input.checkedIn;
+  }
+  if (typeof input.checkedInAt === "string") {
+    payload.checkedInAt = input.checkedInAt;
+  }
+
+  if (Object.keys(payload).length === 0) return;
+
+  await updateDoc(doc(getFirebaseDb(), REGISTRATIONS_COLLECTION, id), payload);
 }
 
 export interface PaymentUpdateInput {

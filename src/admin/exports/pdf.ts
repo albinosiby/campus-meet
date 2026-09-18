@@ -13,6 +13,7 @@ export function downloadPdf(
 ): void {
   const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
   const marginX = 36;
+  const checkedInCount = registrations.filter((reg) => reg.checkedIn).length;
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
@@ -23,7 +24,7 @@ export function downloadPdf(
   doc.setFontSize(10);
   doc.setTextColor(90, 90, 100);
   doc.text(
-    `Generated ${new Date().toLocaleString("en-IN")}  ·  Total: ${stats.total}  ·  Paid: ${stats.paidCount}  ·  Pending: ${stats.pendingCount}  ·  Unpaid: ${stats.unpaidCount}`,
+    `Generated ${new Date().toLocaleString("en-IN")}  ·  Total: ${stats.total}  ·  Present: ${checkedInCount}  ·  Paid: ${stats.paidCount}  ·  Pending: ${stats.pendingCount}  ·  Unpaid: ${stats.unpaidCount}`,
     marginX,
     58
   );
