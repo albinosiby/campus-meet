@@ -301,6 +301,7 @@ export function EventDayOperations() {
 
   return (
     <AdminShell
+      wide
       title="Event Day Desk"
       subtitle="Spot register walk-ins, collect remaining fee, spot-verify, and check in"
     >
@@ -451,7 +452,7 @@ export function EventDayOperations() {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="min-w-[1280px] text-left text-sm">
+              <table className="w-full min-w-[1100px] table-auto text-left text-sm">
                 <thead>
                   <tr className="border-b border-admin-border bg-admin-elevated text-[11px] font-heading uppercase tracking-[0.14em] text-admin-muted">
                     <th className="px-5 py-3">Person</th>

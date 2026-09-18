@@ -12,9 +12,10 @@ interface AdminShellProps {
   children: ReactNode;
   title: string;
   subtitle?: string;
+  wide?: boolean;
 }
 
-export function AdminShell({ children, title, subtitle }: AdminShellProps) {
+export function AdminShell({ children, title, subtitle, wide = false }: AdminShellProps) {
   const router = useRouter();
   const [ready, setReady] = useState(false);
 
@@ -47,7 +48,7 @@ export function AdminShell({ children, title, subtitle }: AdminShellProps) {
       </div>
 
       <header className="relative z-20 border-b border-admin-border bg-admin-surface/90 shadow-sm backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 md:px-8">
+        <div className={`mx-auto flex items-center justify-between gap-4 px-4 py-4 sm:px-6 ${wide ? "max-w-none" : "max-w-7xl md:px-8"}`}>
           <div className="flex min-w-0 items-center gap-3">
             <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full border border-gold/25">
               <Image
@@ -97,7 +98,11 @@ export function AdminShell({ children, title, subtitle }: AdminShellProps) {
         </div>
       </header>
 
-      <main className="relative z-10 mx-auto max-w-7xl px-5 py-8 md:px-8 md:py-10">
+      <main
+        className={`relative z-10 mx-auto w-full px-4 py-6 sm:px-6 md:py-8 ${
+          wide ? "max-w-none" : "max-w-7xl md:px-8 md:py-10"
+        }`}
+      >
         {children}
       </main>
     </div>
